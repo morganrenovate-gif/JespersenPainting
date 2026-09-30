@@ -11,7 +11,7 @@ Priority:
 
 ### CONTROL-001 — Bootstrap autonomous project contracts
 Priority: P0
-Status: IN_PROGRESS
+Status: PASS
 
 Acceptance:
 - approved project-control files committed;
