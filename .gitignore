@@ -1,0 +1,64 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.secrets
+secrets/
+private/
+
+# Real client data / exports
+data/raw/
+data/private/
+exports/
+uploads/
+attachments/
+mail/
+payroll/
+quickbooks/
+invoices/
+
+# Real business documents: prohibited in public repo by default
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+*.tsv
+*.pdf
+*.eml
+*.msg
+*.mbox
+*.zip
+*.7z
+
+# Synthetic fixtures may be explicitly allowed in this path
+!fixtures/
+!fixtures/synthetic/
+!fixtures/synthetic/**/*.csv
+!fixtures/synthetic/**/*.tsv
+!fixtures/synthetic/**/*.xlsx
+!fixtures/synthetic/**/*.pdf
+
+# Local databases / runtime artifacts
+*.db
+*.sqlite
+*.sqlite3
+*.log
+tmp/
+.temp/
+.cache/
+coverage/
+dist/
+build/
+
+# Common package/editor files
+node_modules/
+.DS_Store
+.idea/
+.vscode/
