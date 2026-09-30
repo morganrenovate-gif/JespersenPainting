@@ -1,7 +1,7 @@
 # Jespersen Painting Intelligence Status
 
 ## Phase
-AUTONOMOUS CONTROL-PLANE BOOTSTRAP
+AUTONOMOUS RUNTIME WIRING
 
 ## Current objective
 Replace the prior hourly one-task worker pattern with the DropRadar-style backlog-driven autonomous build model while preserving the existing Jespersen Intelligence runtime and production boundary.
@@ -12,7 +12,8 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 - Default branch: `main`
 - GitHub is the durable project/source-control plane.
 - Real Jespersen client data is prohibited from this public repository.
-- Project contracts are being bootstrapped.
+- Project contracts are committed and verified.
+- Public-repository sensitive-data contract is committed and verified.
 
 ## Hedy
 - Project: Jespersen Intelligence
@@ -52,11 +53,11 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 
 ## Autonomous build status
 - Prior hourly Jespersen Mission Worker: disabled.
-- DropRadar-style Build Director model: control-plane contracts being bootstrapped.
+- DropRadar-style Build Director model: control-plane contracts committed and verified.
 - Persistent coding/runtime execution wiring: not yet established by this bootstrap.
 - Routine implementation must not be represented as unattended until the persistent runtime is actually connected and verified.
 
-## Immediate next work after bootstrap
+## Immediate next work
 1. Wire a persistent authorized autonomous coding runtime to this repo and a safe Hedy non-production lane.
 2. Load/maintain the acceptance-linked backlog.
 3. Resolve or isolate the QuickBooks provider-read blocker.
