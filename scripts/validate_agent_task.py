@@ -32,9 +32,24 @@ SECRET_PATTERNS = [
 
 
 def value_for(body: str, label: str) -> str:
-    for line in body.splitlines():
-        if line.strip().lower().startswith(label.lower()):
-            return line.split(":", 1)[1].strip()
+    lines = body.splitlines()
+    target = label.lower()
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.lower().startswith(target):
+            continue
+        same_line = stripped.split(":", 1)[1].strip()
+        if same_line:
+            return same_line
+
+        block = []
+        for later in lines[idx + 1 :]:
+            candidate = later.strip()
+            if any(candidate.lower().startswith(required.lower()) for required in REQUIRED_LABELS):
+                break
+            if candidate:
+                block.append(candidate)
+        return "\n".join(block).strip()
     return ""
 
 
