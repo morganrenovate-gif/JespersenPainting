@@ -18,6 +18,7 @@ PROTECTED = {
     "scripts/validate_controller_plan.py",
     "AGENTS.md",
     "DATA_BOUNDARY.md",
+    "UI_STANDARD.md",
     ".codex/config.toml",
 }
 PROTECTED_PREFIXES = (".github/",)
