@@ -61,13 +61,13 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 
 ## Immediate next work
 1. Merge and smoke-test the prepared Perplexity-backed repository runtime.
-2. Verify Mission Controller -> issue -> Codex branch -> safety gate -> PR -> independent QA -> merge -> next-task chain.
+2. Verify Mission Controller -> issue -> Perplexity implementation branch -> safety gate -> PR -> independent QA -> merge -> next-task chain.
 3. Wire the separate safe Hedy non-production execution lane.
 4. Load/maintain the acceptance-linked backlog.
-3. Resolve or isolate the QuickBooks provider-read blocker.
-4. Continue independent TIME/DATA work even if one provider dependency is blocked.
-5. Build the 350+ workbook ingestion architecture outside public GitHub data storage.
-6. Reach independently verified staging acceptance.
+5. Resolve or isolate the QuickBooks provider-read blocker.
+6. Continue independent TIME/DATA work even if one provider dependency is blocked.
+7. Build the 350+ workbook ingestion architecture outside public GitHub data storage.
+8. Reach independently verified staging acceptance.
 
 ## Founder action required
 None for documentation/control-plane bootstrap after the exact approval already granted.
