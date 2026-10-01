@@ -1,0 +1,141 @@
+name: Jespersen Mission Controller
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: jespersen-mission-controller
+  cancel-in-progress: false
+
+jobs:
+  select-next:
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Agent: issue #'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Stop if an executor task is already open
+        id: active
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          count="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [CODEX]' --json number --jq 'length')"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - name: Require Codex credential
+        if: steps.active.outputs.count == '0'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          [ -n "${OPENAI_API_KEY:-}" ] || { echo "OPENAI_API_KEY GitHub Actions secret is not configured." >&2; exit 1; }
+
+      - name: Build controller prompt
+        if: steps.active.outputs.count == '0'
+        run: |
+          cat > /tmp/mission-controller.md <<'PROMPT'
+          You are the Jespersen Mission Controller.
+
+          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md and AUTONOMY_EXECUTOR.md.
+
+          Select exactly one highest-value unblocked repository coding task that:
+          - is explicitly present in BACKLOG.md;
+          - is T0 or T1 only;
+          - can be completed using public repository context and synthetic fixtures;
+          - does not require credentials, private Jespersen data, QuickBooks/Gmail row data, Hedy private payloads, production promotion, auth/permission changes, money/pricing, contracts, domains/DNS, destructive action, or other T3 authority;
+          - advances an acceptance criterion;
+          - has a concrete rollback.
+
+          Do not select a task whose acceptance requires live Hedy/provider evidence if the repository-only coding part cannot be independently completed first.
+
+          If no eligible task exists, return action=stop.
+
+          Return JSON only matching the supplied schema. Keep requested_work and acceptance implementation-grade and bounded. Never include real Jespersen data or secrets.
+          PROMPT
+
+      - name: Run Mission Controller
+        if: steps.active.outputs.count == '0'
+        id: controller
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":read-only"
+          prompt-file: /tmp/mission-controller.md
+          output-file: /tmp/controller-plan.json
+          output-schema: |
+            {
+              "type":"object",
+              "additionalProperties":false,
+              "properties":{
+                "action":{"type":"string","enum":["dispatch","stop"]},
+                "task_id":{"type":"string"},
+                "permission_tier":{"type":"string","enum":["T0","T1"]},
+                "environment":{"type":"string","enum":["dev","staging"]},
+                "objective":{"type":"string"},
+                "requested_work":{"type":"string"},
+                "acceptance":{"type":"string"},
+                "constraints":{"type":"string"},
+                "rollback":{"type":"string"}
+              },
+              "required":["action","task_id","permission_tier","environment","objective","requested_work","acceptance","constraints","rollback"]
+            }
+          effort: high
+
+      - name: Validate controller plan
+        if: steps.active.outputs.count == '0'
+        id: validate
+        run: |
+          set -euo pipefail
+          python scripts/validate_controller_plan.py /tmp/controller-plan.json BACKLOG.md
+          action="$(python -c 'import json; print(json.load(open("/tmp/controller-plan.json"))["action"])')"
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+
+      - name: Create bounded Codex task
+        if: steps.active.outputs.count == '0' && steps.validate.outputs.action == 'dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/issue-body.md
+          import json
+          p=json.load(open("/tmp/controller-plan.json"))
+          print(f"""Task ID: {p['task_id']}
+          Client context: jespersen-painting
+          Permission tier: {p['permission_tier']}
+          Environment: {p['environment']}
+          Public-safe task package: yes
+
+          Objective:
+          {p['objective']}
+
+          Requested work:
+          {p['requested_work']}
+
+          Acceptance:
+          {p['acceptance']}
+
+          Constraints:
+          {p['constraints']}
+
+          Rollback:
+          {p['rollback']}
+          """)
+          PY
+          task_id="$(python -c 'import json; print(json.load(open("/tmp/controller-plan.json"))["task_id"])')"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "[CODEX] $task_id" --body-file /tmp/issue-body.md
+
+      - name: Record stop
+        if: steps.active.outputs.count == '0' && steps.validate.outputs.action == 'stop'
+        run: echo "No eligible public-safe T0/T1 repository task is currently available."
