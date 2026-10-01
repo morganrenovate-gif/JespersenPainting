@@ -26,6 +26,7 @@ SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "dist", "build", "__pycach
 PROTECTED_EXACT = {
     "AGENTS.md",
     "DATA_BOUNDARY.md",
+    "UI_STANDARD.md",
     ".codex/config.toml",
     "scripts/perplexity_repo_agent.py",
     "scripts/agent_precommit_gate.py",
