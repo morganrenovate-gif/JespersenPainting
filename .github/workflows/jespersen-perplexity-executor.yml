@@ -16,12 +16,12 @@ permissions:
   issues: write
 
 concurrency:
-  group: jespersen-agent-${{ github.event.issue.number || inputs.issue_number }}
+  group: "jespersen-agent-${{ github.event.issue.number || inputs.issue_number }}"
   cancel-in-progress: false
 
 jobs:
   implement:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[AGENT]')
+    if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[AGENT]') }}"
     runs-on: ubuntu-latest
     outputs:
       issue_number: ${{ steps.task.outputs.issue_number }}
@@ -122,7 +122,7 @@ Hard execution rules:
       - name: Run Perplexity implementation agent
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          MODEL: ${{ vars.PERPLEXITY_CODER_MODEL || 'openai/gpt-6-sol' }}
+          MODEL: "${{ vars.PERPLEXITY_CODER_MODEL || 'openai/gpt-6-sol' }}"
         run: |
           set -euo pipefail
           python scripts/perplexity_repo_agent.py             --mode implement             --prompt-file /tmp/jespersen-agent-prompt.md             --output-file /tmp/jespersen-agent-result.txt             --model "$MODEL"             --service-tier flex             --max-output-tokens 10000
@@ -248,7 +248,7 @@ Then give concise evidence and required remediation if FAIL.
       - name: Run independent Perplexity review
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          MODEL: ${{ vars.PERPLEXITY_REVIEW_MODEL || 'google/gemini-3.7-flash' }}
+          MODEL: "${{ vars.PERPLEXITY_REVIEW_MODEL || 'google/gemini-3.7-flash' }}"
         run: |
           set -euo pipefail
           [ -n "${PERPLEXITY_API_KEY:-}" ] || { echo "PERPLEXITY_API_KEY missing" >&2; exit 1; }
