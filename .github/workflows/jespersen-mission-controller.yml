@@ -49,7 +49,7 @@ jobs:
           cat > /tmp/mission-controller.md <<'PROMPT'
           You are the Jespersen Mission Controller.
 
-          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md.
+          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md.
 
           Select exactly one highest-value unblocked repository coding task that:
           - is explicitly present in BACKLOG.md;
@@ -57,7 +57,8 @@ jobs:
           - can be completed using public repository context and synthetic fixtures;
           - does not require credentials, private Jespersen data, QuickBooks/Gmail row data, Hedy private payloads, production promotion, auth/permission changes, money/pricing, contracts, domains/DNS, destructive action, or other T3 authority;
           - advances an acceptance criterion;
-          - has a concrete rollback.
+          - has a concrete rollback;
+          - if the task affects any user-facing surface, its requested_work/acceptance/constraints must explicitly inherit UI_STANDARD.md / UI-STD-1.0 and declare the required design assignment: Product, Surface, Dominant Visual Archetype, Secondary Influence, Palette, Density, Motion Intensity, Primary Users, and Critical Information.
 
           Do not select a task whose acceptance requires live Hedy/provider evidence if the repository-only coding part cannot be independently completed first.
 
