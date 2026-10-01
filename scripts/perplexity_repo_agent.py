@@ -137,7 +137,9 @@ def rel(p: pathlib.Path) -> str:
 
 
 def is_protected(path: str) -> bool:
-    norm = pathlib.PurePosixPath(path).as_posix().lstrip("./")
+    norm = pathlib.PurePosixPath(path).as_posix()
+    if norm.startswith("./"):
+        norm = norm[2:]
     return norm in PROTECTED_EXACT or any(norm.startswith(prefix) for prefix in PROTECTED_PREFIXES)
 
 
@@ -345,8 +347,11 @@ def run_agent(args) -> str:
         if isinstance(cost, (int, float)):
             total_cost += float(cost)
 
-        if response.get("status") not in {"completed", "incomplete"}:
-            raise RuntimeError(f"Perplexity response failed: {json.dumps(response.get('error'))[:2000]}")
+        if response.get("status") != "completed":
+            detail = response.get("incomplete_details") or response.get("error")
+            raise RuntimeError(
+                f"Perplexity response did not complete: status={response.get('status')} detail={json.dumps(detail)[:2000]}"
+            )
 
         calls = [item for item in response.get("output", []) if item.get("type") == "function_call"]
         if not calls:
