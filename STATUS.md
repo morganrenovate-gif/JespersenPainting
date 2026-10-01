@@ -51,6 +51,13 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 - Estimator architecture/backtest work remains incomplete.
 - A meaningful real backtest requires a complete plan set plus matching completed-job actuals.
 
+## UI architecture standard
+- Canonical UI standard: UI-STD-1.0 at `hedy://corlentra/ui-standard-v1`.
+- Repository mirror: `UI_STANDARD.md`.
+- Jespersen profile: Industrial Operations + Digital Blueprint; compact; low-to-moderate motion.
+- Mission Controller, implementation executor, specialist registry, and independent QA are bound to this standard.
+- UI work fails closed if the standard is missing/unresolved and generic AI SaaS output is not accepted.
+
 ## Autonomous build status
 - Prior hourly Jespersen Mission Worker: disabled.
 - DropRadar-style Build Director model: control-plane contracts committed and verified.
