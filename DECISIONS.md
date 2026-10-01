@@ -51,10 +51,10 @@ Status: Accepted
 Do not call a capability complete merely because code exists. Require deployed/tested evidence or a durable runtime record.
 
 
-## D-011 — Codex is the bounded Product Engineering executor
+## D-011 — Perplexity Agent API is the bounded Product Engineering executor
 Status: Accepted
 
-Use the official pinned Codex GitHub Action as the repository coding executor. The Mission Controller owns task selection and bounded dispatch; Codex implements on an isolated branch; a fresh read-only Codex run performs independent QA before automated merge. Codex is an execution lane, not a new governance agent.
+Use Perplexity Agent API credits as the repository coding runtime. Mission Controller owns task selection and bounded dispatch; the implementation model edits only through restricted repository tools on an isolated branch; trusted checks run after the provider-key process exits; a different model/provider performs independent QA before automated merge. The executor is an execution lane, not a new governance agent.
 
 ## D-012 — Mission Controller is event-driven, not hourly
 Status: Accepted
