@@ -54,12 +54,16 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 ## Autonomous build status
 - Prior hourly Jespersen Mission Worker: disabled.
 - DropRadar-style Build Director model: control-plane contracts committed and verified.
-- Persistent coding/runtime execution wiring: not yet established by this bootstrap.
-- Routine implementation must not be represented as unattended until the persistent runtime is actually connected and verified.
+- Repository-side persistent coding runtime: implementation prepared using pinned official Codex GitHub Action plus an independent read-only Codex QA pass.
+- Event-driven Mission Controller: implementation prepared to choose one eligible acceptance-linked T0/T1 repository task after each accepted agent PR and dispatch the next issue automatically.
+- Activation blocker: GitHub Actions repository secret `OPENAI_API_KEY` is not yet established/verified.
+- Hedy deployment/runtime execution remains a separate controlled lane; repository automation must not be represented as Hedy staging autonomy until that lane is independently wired and verified.
 
 ## Immediate next work
-1. Wire a persistent authorized autonomous coding runtime to this repo and a safe Hedy non-production lane.
-2. Load/maintain the acceptance-linked backlog.
+1. Activate and smoke-test the prepared repository Codex runtime by provisioning `OPENAI_API_KEY` in GitHub Actions.
+2. Verify Mission Controller -> issue -> Codex branch -> safety gate -> PR -> independent QA -> merge -> next-task chain.
+3. Wire the separate safe Hedy non-production execution lane.
+4. Load/maintain the acceptance-linked backlog.
 3. Resolve or isolate the QuickBooks provider-read blocker.
 4. Continue independent TIME/DATA work even if one provider dependency is blocked.
 5. Build the 350+ workbook ingestion architecture outside public GitHub data storage.
