@@ -11,8 +11,10 @@ import sys
 
 PROTECTED = {
     ".github/workflows/jespersen-codex-executor.yml",
+    ".github/workflows/jespersen-mission-controller.yml",
     "scripts/agent_precommit_gate.py",
     "scripts/validate_codex_task.py",
+    "scripts/validate_controller_plan.py",
     "AGENTS.md",
     "DATA_BOUNDARY.md",
     ".codex/config.toml",
