@@ -24,6 +24,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Stop if an executor task is already open
         id: active
@@ -31,16 +32,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          count="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [CODEX]' --json number --jq 'length')"
+          count="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [AGENT]' --json number --jq 'length')"
           echo "count=$count" >> "$GITHUB_OUTPUT"
 
-      - name: Require Codex credential
+      - name: Require Perplexity credential
         if: steps.active.outputs.count == '0'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
         run: |
           set -euo pipefail
-          [ -n "${OPENAI_API_KEY:-}" ] || { echo "OPENAI_API_KEY GitHub Actions secret is not configured." >&2; exit 1; }
+          [ -n "${PERPLEXITY_API_KEY:-}" ] || { echo "PERPLEXITY_API_KEY GitHub Actions secret is not configured." >&2; exit 1; }
 
       - name: Build controller prompt
         if: steps.active.outputs.count == '0'
@@ -48,7 +49,7 @@ jobs:
           cat > /tmp/mission-controller.md <<'PROMPT'
           You are the Jespersen Mission Controller.
 
-          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md and AUTONOMY_EXECUTOR.md.
+          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md.
 
           Select exactly one highest-value unblocked repository coding task that:
           - is explicitly present in BACKLOG.md;
@@ -62,36 +63,23 @@ jobs:
 
           If no eligible task exists, return action=stop.
 
-          Return JSON only matching the supplied schema. Keep requested_work and acceptance implementation-grade and bounded. Never include real Jespersen data or secrets.
+          Return JSON only with these keys:
+          action, task_id, permission_tier, environment, objective, requested_work, acceptance, constraints, rollback.
+
+          action must be "dispatch" or "stop".
+          permission_tier must be "T0" or "T1".
+          environment must be "dev" or "staging".
+          Never include real Jespersen data or secrets.
           PROMPT
 
       - name: Run Mission Controller
         if: steps.active.outputs.count == '0'
-        id: controller
-        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          permission-profile: ":read-only"
-          prompt-file: /tmp/mission-controller.md
-          output-file: /tmp/controller-plan.json
-          output-schema: |
-            {
-              "type":"object",
-              "additionalProperties":false,
-              "properties":{
-                "action":{"type":"string","enum":["dispatch","stop"]},
-                "task_id":{"type":"string"},
-                "permission_tier":{"type":"string","enum":["T0","T1"]},
-                "environment":{"type":"string","enum":["dev","staging"]},
-                "objective":{"type":"string"},
-                "requested_work":{"type":"string"},
-                "acceptance":{"type":"string"},
-                "constraints":{"type":"string"},
-                "rollback":{"type":"string"}
-              },
-              "required":["action","task_id","permission_tier","environment","objective","requested_work","acceptance","constraints","rollback"]
-            }
-          effort: high
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          MODEL: ${{ vars.PERPLEXITY_CONTROLLER_MODEL || 'openai/gpt-6-luna' }}
+        run: |
+          set -euo pipefail
+          python scripts/perplexity_repo_agent.py             --mode controller             --prompt-file /tmp/mission-controller.md             --output-file /tmp/controller-plan.json             --model "$MODEL"             --service-tier flex             --max-output-tokens 3000
 
       - name: Validate controller plan
         if: steps.active.outputs.count == '0'
@@ -102,7 +90,7 @@ jobs:
           action="$(python -c 'import json; print(json.load(open("/tmp/controller-plan.json"))["action"])')"
           echo "action=$action" >> "$GITHUB_OUTPUT"
 
-      - name: Create bounded Codex task
+      - name: Create bounded agent task
         if: steps.active.outputs.count == '0' && steps.validate.outputs.action == 'dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -134,7 +122,7 @@ jobs:
           """)
           PY
           task_id="$(python -c 'import json; print(json.load(open("/tmp/controller-plan.json"))["task_id"])')"
-          gh issue create --repo "$GITHUB_REPOSITORY" --title "[CODEX] $task_id" --body-file /tmp/issue-body.md
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "[AGENT] $task_id" --body-file /tmp/issue-body.md
 
       - name: Record stop
         if: steps.active.outputs.count == '0' && steps.validate.outputs.action == 'stop'

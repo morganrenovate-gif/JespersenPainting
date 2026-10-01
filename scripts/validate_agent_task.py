@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a public-safe Jespersen Codex task envelope."""
+"""Validate a public-safe Jespersen autonomous coding task envelope."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ REQUIRED_LABELS = [
 
 SECRET_PATTERNS = [
     re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
+    re.compile(r"\bpplx-[A-Za-z0-9_-]{20,}\b", re.I),
     re.compile(r"\b(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]{20,}\b"),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
     re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)"),
@@ -39,7 +40,7 @@ def value_for(body: str, label: str) -> str:
 
 def main() -> int:
     if len(sys.argv) != 2:
-        print("usage: validate_codex_task.py <task.json>", file=sys.stderr)
+        print("usage: validate_agent_task.py <task.json>", file=sys.stderr)
         return 2
 
     task = json.loads(pathlib.Path(sys.argv[1]).read_text())
@@ -47,8 +48,8 @@ def main() -> int:
     body = str(task.get("body") or "")
 
     failures: list[str] = []
-    if not title.startswith("[CODEX]"):
-        failures.append("title must start with [CODEX]")
+    if not title.startswith("[AGENT]"):
+        failures.append("title must start with [AGENT]")
     if not body or len(body) > MAX_BODY:
         failures.append(f"task body must be 1..{MAX_BODY} characters")
 
@@ -60,7 +61,7 @@ def main() -> int:
         failures.append("Client context must equal jespersen-painting")
 
     if value_for(body, "Permission tier:") not in {"T0", "T1"}:
-        failures.append("Codex executor lane accepts only T0 or T1")
+        failures.append("repository executor lane accepts only T0 or T1")
 
     if value_for(body, "Environment:") not in {"dev", "staging"}:
         failures.append("Environment must be dev or staging")
@@ -74,12 +75,12 @@ def main() -> int:
             break
 
     if failures:
-        print("CODEX TASK ENVELOPE: FAIL", file=sys.stderr)
+        print("AGENT TASK ENVELOPE: FAIL", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         return 1
 
-    print("CODEX TASK ENVELOPE: PASS")
+    print("AGENT TASK ENVELOPE: PASS")
     return 0
 
 

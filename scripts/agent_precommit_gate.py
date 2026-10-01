@@ -10,15 +10,17 @@ import subprocess
 import sys
 
 PROTECTED = {
-    ".github/workflows/jespersen-codex-executor.yml",
-    ".github/workflows/jespersen-mission-controller.yml",
+
     "scripts/agent_precommit_gate.py",
-    "scripts/validate_codex_task.py",
+    "scripts/perplexity_repo_agent.py",
+    "scripts/run_repo_checks.py",
+    "scripts/validate_agent_task.py",
     "scripts/validate_controller_plan.py",
     "AGENTS.md",
     "DATA_BOUNDARY.md",
     ".codex/config.toml",
 }
+PROTECTED_PREFIXES = (".github/",)
 
 DENIED_SUFFIXES = {
     ".xlsx", ".xls", ".xlsm", ".xlsb", ".ods", ".csv", ".tsv",
@@ -31,6 +33,7 @@ MAX_FILE_BYTES = 524_288
 
 SECRET_PATTERNS = [
     ("OpenAI/API-style secret", re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b")),
+    ("Perplexity API secret", re.compile(r"\bpplx-[A-Za-z0-9_-]{20,}\b", re.I)),
     ("GitHub PAT", re.compile(r"\b(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]{20,}\b")),
     ("AWS access key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("Bearer credential", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{20,}={0,2}\b", re.I)),
@@ -92,7 +95,7 @@ def main() -> int:
     paths = changed_paths(args)
 
     for path in paths:
-        if path in PROTECTED:
+        if path in PROTECTED or any(path.startswith(prefix) for prefix in PROTECTED_PREFIXES):
             failures.append(f"protected control-plane file changed: {path}")
             continue
 

@@ -4,14 +4,7 @@ This file batches actions that truly require Adam.
 
 ## Open
 
-### CONTROL-EXECUTOR-CREDENTIAL-001
-Action: Add an OpenAI API key as the GitHub Actions repository secret `OPENAI_API_KEY` for `morganrenovate-gif/JespersenPainting`.
-
-Reason: the pinned official Codex GitHub Action needs a credential on an ephemeral GitHub runner. This is a credential setup action and is intentionally not performed by the autonomous coding lane.
-
-Do not paste the key into ChatGPT, GitHub issues, repository files, Hedy data, or workflow logs.
-
-No other founder action is required to activate the repository-side coding loop.
+None for the repository executor credential setup.
 
 
 
@@ -38,3 +31,12 @@ Result:
 - public GitHub repository selected as project/source-control plane;
 - exact bootstrap approval granted;
 - project contracts authorized for creation.
+
+
+### CONTROL-EXECUTOR-CREDENTIAL-001
+Decision: Use existing Perplexity API credits instead of requiring new OpenAI API billing.
+
+Result:
+- user reports `PERPLEXITY_API_KEY` is stored as a GitHub Actions repository secret;
+- the key is never committed or pasted into project records;
+- runtime smoke verification is still required after merge.
