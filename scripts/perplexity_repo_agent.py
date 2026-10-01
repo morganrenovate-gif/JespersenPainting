@@ -208,8 +208,12 @@ def tool_search_text(query: str, path: str = ".", limit: int = 100):
     return {"matches": matches, "truncated": False}
 
 
-def tool_git_diff(path: str | None = None):
+def tool_git_diff(path: str | None = None, base: str | None = None):
     cmd = ["git", "diff", "--no-ext-diff", "--unified=3"]
+    if base:
+        if base != "origin/main":
+            raise ValueError("only origin/main is allowed as a diff base")
+        cmd.append("origin/main...HEAD")
     if path:
         p = safe_path(path)
         cmd.extend(["--", rel(p)])
