@@ -60,3 +60,9 @@ Use Perplexity Agent API credits as the repository coding runtime. Mission Contr
 Status: Accepted
 
 After an accepted autonomous PR merges, the Mission Controller immediately re-reads the durable project contracts/backlog and dispatches the next eligible public-safe T0/T1 repository task. It stops when no eligible task exists or when work requires private runtime evidence/T3 authority. This avoids arbitrary hourly one-task polling.
+
+
+## D-013 — UI-STD-1.0 is inherited by the entire Jespersen workforce
+Status: Accepted
+
+Every Jespersen agent and execution lane inherits `UI_STANDARD.md`, the repository mirror of canonical `hedy://corlentra/ui-standard-v1` plus the Jespersen project guide. Jespersen defaults to Industrial Operations + Digital Blueprint, compact density and low-to-moderate motion. UI work that cannot resolve this standard fails closed. Independent QA treats accessibility, responsiveness, data presentation and anti-generic failures as acceptance failures.
