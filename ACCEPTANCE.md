@@ -86,6 +86,16 @@ Founder review should be requested only when required criteria are PASS or expli
 - [ ] One completed-job backtest protocol exists.
 - [ ] A real backtest is not claimed until matching plan set and completed actuals are available.
 
+## Required: UI / UX
+- [ ] Every user-facing implementation is reviewed against `UI_STANDARD.md` / UI-STD-1.0.
+- [ ] UI briefs declare Product, Surface, dominant archetype, secondary influence, palette, density, motion intensity, primary users, and critical information.
+- [ ] Jespersen surfaces preserve the Industrial Operations + Digital Blueprint profile unless an explicit project guide narrows it.
+- [ ] Financial/time values use appropriate aligned/tabular presentation and exception states outrank decorative metrics.
+- [ ] Mobile interaction is explicitly designed rather than treated as compressed desktop.
+- [ ] Accessibility, visible focus, touch targets, semantic structure, status-without-color-only, and reduced-motion behavior are verified.
+- [ ] Anti-generic review passes: the surface is recognizably Jespersen/construction operations without relying on the logo.
+- [ ] Generic AI SaaS output is release-blocking until redesigned.
+
 ## Required: QA / release
 - [ ] Unit checks pass where applicable.
 - [ ] Integration tests pass.
