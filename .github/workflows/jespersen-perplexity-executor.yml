@@ -1,12 +1,14 @@
 name: Jespersen Perplexity Executor
 
-on:
+"on":
   issues:
-    types: [opened, reopened]
+    types:
+      - opened
+      - reopened
   workflow_dispatch:
     inputs:
       issue_number:
-        description: Existing [AGENT] issue number to execute
+        description: "Existing [AGENT] issue number to execute"
         required: true
         type: string
 
@@ -15,21 +17,13 @@ permissions:
   pull-requests: write
   issues: write
 
-concurrency:
-  group: "jespersen-agent-${{ github.event.issue.number || inputs.issue_number }}"
-  cancel-in-progress: false
-
 jobs:
-  implement:
+  implement_and_review:
     if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[AGENT]') }}"
     runs-on: ubuntu-latest
-    outputs:
-      issue_number: ${{ steps.task.outputs.issue_number }}
-      branch_name: ${{ steps.branch.outputs.branch_name }}
-      pr_number: ${{ steps.pr.outputs.pr_number }}
-      changed: ${{ steps.changed.outputs.changed }}
+
     steps:
-      - name: Checkout trusted control plane
+      - name: Checkout trusted main
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           fetch-depth: 0
@@ -38,9 +32,9 @@ jobs:
       - name: Resolve task
         id: task
         env:
-          GH_TOKEN: ${{ github.token }}
-          INPUT_ISSUE: ${{ inputs.issue_number }}
-          EVENT_ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: "${{ github.token }}"
+          INPUT_ISSUE: "${{ inputs.issue_number }}"
+          EVENT_ISSUE: "${{ github.event.issue.number }}"
         run: |
           set -euo pipefail
           issue="${EVENT_ISSUE:-${INPUT_ISSUE:-}}"
@@ -50,8 +44,8 @@ jobs:
 
       - name: Verify trusted trigger actor
         env:
-          GH_TOKEN: ${{ github.token }}
-          ACTOR: ${{ github.actor }}
+          GH_TOKEN: "${{ github.token }}"
+          ACTOR: "${{ github.actor }}"
         run: |
           set -euo pipefail
           if [ "$ACTOR" = "github-actions[bot]" ]; then
@@ -69,7 +63,7 @@ jobs:
 
       - name: Require Perplexity credential
         env:
-          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          PERPLEXITY_API_KEY: "${{ secrets.PERPLEXITY_API_KEY }}"
         run: |
           set -euo pipefail
           [ -n "${PERPLEXITY_API_KEY:-}" ] || { echo "PERPLEXITY_API_KEY GitHub Actions secret is not configured." >&2; exit 1; }
@@ -77,7 +71,7 @@ jobs:
       - name: Create isolated implementation branch
         id: branch
         env:
-          ISSUE_NUMBER: ${{ steps.task.outputs.issue_number }}
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           set -euo pipefail
           branch="agent/issue-${ISSUE_NUMBER}-${GITHUB_RUN_ID}"
@@ -86,46 +80,49 @@ jobs:
 
       - name: Build implementation prompt
         env:
-          ISSUE_NUMBER: ${{ steps.task.outputs.issue_number }}
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           python - <<'PY'
-          import json, os, pathlib
+          import json
+          import os
+          import pathlib
+
           task = json.loads(pathlib.Path("/tmp/jespersen-agent-task.json").read_text())
           prompt = f"""You are the bounded Product Engineering implementation executor for Jespersen Painting Intelligence.
 
-Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md before changing anything.
+          Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md before changing anything.
 
-Task source: public GitHub issue #{os.environ['ISSUE_NUMBER']}
-Title: {task['title']}
+          Task source: public GitHub issue #{os.environ['ISSUE_NUMBER']}
+          Title: {task['title']}
 
-Task package:
-{task.get('body') or ''}
+          Task package:
+          {task.get('body') or ''}
 
-Hard execution rules:
-- Work only inside this checked-out public repository using the provided repository tools.
-- This lane is T0/T1 development work only.
-- Never perform production promotion, money movement, pricing, contracts, auth/permission changes, credential/secret handling, destructive external actions, or external communications.
-- Never request or use real Jespersen customer, employee, payroll, invoice, Gmail, QuickBooks, workbook, or other private operational data.
-- Use synthetic fixtures only.
-- Never add credentials, tokens, private keys, OAuth material, or local machine paths.
-- Control-plane files are tool-protected and must not be modified.
-- Preserve production as out of scope.
-- UI_STANDARD.md / UI-STD-1.0 is inherited by this executor. Any user-facing UI work must follow the Jespersen Industrial Operations + Digital Blueprint profile, required design assignment, accessibility/responsive rules, and anti-generic review gate. If UI_STANDARD.md is missing or inconsistent, do not implement UI.
-- Implement the smallest complete change that satisfies the task acceptance criteria.
-- Add or update appropriate tests when useful. A trusted workflow step runs executable tests after you finish; do not claim they passed before that evidence exists.
-- Do not commit, push, open a pull request, merge, or attempt network/GitHub/Hedy actions.
-- If the task conflicts with repository contracts or requires T3/private runtime evidence, make no unsafe change and explain the blocker in your final message.
-"""
+          Hard execution rules:
+          - Work only inside this checked-out public repository using the provided repository tools.
+          - This lane is T0/T1 development work only.
+          - Never perform production promotion, money movement, pricing, contracts, auth/permission changes, credential/secret handling, destructive external actions, or external communications.
+          - Never request or use real Jespersen customer, employee, payroll, invoice, Gmail, QuickBooks, workbook, or other private operational data.
+          - Use synthetic fixtures only.
+          - Never add credentials, tokens, private keys, OAuth material, or local machine paths.
+          - Control-plane files are tool-protected and must not be modified.
+          - Preserve production as out of scope.
+          - UI_STANDARD.md / UI-STD-1.0 is inherited. Any user-facing UI work must use Jespersen's Industrial Operations + Digital Blueprint profile, required design assignment, accessibility/responsive rules, and anti-generic review gate. If UI_STANDARD.md is missing or inconsistent, do not implement UI.
+          - Implement the smallest complete change that satisfies the task acceptance criteria.
+          - Add or update appropriate tests when useful. A trusted workflow step runs executable tests after you finish; do not claim they passed before that evidence exists.
+          - Do not commit, push, open a pull request, merge, or attempt network/GitHub/Hedy actions.
+          - If the task conflicts with repository contracts or requires T3/private runtime evidence, make no unsafe change and explain the blocker in your final message.
+          """
           pathlib.Path("/tmp/jespersen-agent-prompt.md").write_text(prompt)
           PY
 
       - name: Run Perplexity implementation agent
         env:
-          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          MODEL: "${{ vars.PERPLEXITY_CODER_MODEL || 'openai/gpt-6-sol' }}"
+          PERPLEXITY_API_KEY: "${{ secrets.PERPLEXITY_API_KEY }}"
+          MODEL: "openai/gpt-6-sol"
         run: |
           set -euo pipefail
-          python scripts/perplexity_repo_agent.py             --mode implement             --prompt-file /tmp/jespersen-agent-prompt.md             --output-file /tmp/jespersen-agent-result.txt             --model "$MODEL"             --service-tier flex             --max-output-tokens 10000
+          python scripts/perplexity_repo_agent.py --mode implement --prompt-file /tmp/jespersen-agent-prompt.md --output-file /tmp/jespersen-agent-result.txt --model "$MODEL" --service-tier flex --max-output-tokens 10000
 
       - name: Run trusted repository checks
         run: python scripts/run_repo_checks.py
@@ -146,12 +143,24 @@ Hard execution rules:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Commit and push bounded change
-        if: steps.changed.outputs.changed == 'true'
+      - name: Record no-change result
+        if: "${{ steps.changed.outputs.changed == 'false' }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ steps.branch.outputs.branch_name }}
-          ISSUE_NUMBER: ${{ steps.task.outputs.issue_number }}
+          GH_TOKEN: "${{ github.token }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
+        run: |
+          set -euo pipefail
+          result="$(cat /tmp/jespersen-agent-result.txt 2>/dev/null || true)"
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "The bounded implementation agent produced no repository change.
+
+          $result"
+
+      - name: Commit and push bounded change
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+          BRANCH: "${{ steps.branch.outputs.branch_name }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           set -euo pipefail
           git config user.name "Jespersen Autonomous Executor"
@@ -164,98 +173,73 @@ Hard execution rules:
 
       - name: Open pull request
         id: pr
-        if: steps.changed.outputs.changed == 'true'
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-          BRANCH: ${{ steps.branch.outputs.branch_name }}
-          ISSUE_NUMBER: ${{ steps.task.outputs.issue_number }}
+          GH_TOKEN: "${{ github.token }}"
+          BRANCH: "${{ steps.branch.outputs.branch_name }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           set -euo pipefail
-          url="$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH"             --title "Agent: issue #${ISSUE_NUMBER}"             --body "Autonomous bounded implementation for #${ISSUE_NUMBER}. Public-repo safety gate and trusted checks passed. Independent cross-model QA is required before merge.")"
+          url="$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "Agent: issue #${ISSUE_NUMBER}" --body "Autonomous bounded implementation for #${ISSUE_NUMBER}. Trusted checks and public-repo safety gate passed. Independent cross-model QA is required before merge.")"
           number="${url##*/}"
           echo "pr_number=$number" >> "$GITHUB_OUTPUT"
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Implementation PR opened: $url. Independent QA is running."
 
-      - name: Record no-change result
-        if: steps.changed.outputs.changed == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ steps.task.outputs.issue_number }}
-        run: |
-          result="$(cat /tmp/jespersen-agent-result.txt 2>/dev/null || true)"
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "The bounded implementation agent produced no repository change.
-
-$result"
-
-  review:
-    needs: implement
-    if: needs.implement.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout candidate branch
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
-        with:
-          ref: ${{ needs.implement.outputs.branch_name }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Fetch trusted main
+      - name: Fetch trusted main for review
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         run: git fetch origin main:refs/remotes/origin/main
 
-      - name: Run trusted safety gate from main
-        run: |
-          set -euo pipefail
-          git show origin/main:scripts/agent_precommit_gate.py > /tmp/agent_precommit_gate.py
-          python /tmp/agent_precommit_gate.py --base origin/main --head HEAD
-          git diff --check origin/main...HEAD
-
       - name: Build independent review prompt
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         env:
-          ISSUE_NUMBER: ${{ needs.implement.outputs.issue_number }}
-          PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
+          PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
         run: |
           python - <<'PY'
-          import os, pathlib
+          import os
+          import pathlib
+
           prompt = f"""You are the independent QA/Security reviewer for Jespersen Painting Intelligence.
 
-Review pull request #{os.environ['PR_NUMBER']} implementing issue #{os.environ['ISSUE_NUMBER']}.
+          Review pull request #{os.environ['PR_NUMBER']} implementing issue #{os.environ['ISSUE_NUMBER']}.
 
-Read AGENTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, the task in BACKLOG.md, and the complete diff using repository tools.
+          Read AGENTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, the task in BACKLOG.md, and use git_diff with base=origin/main to inspect the complete candidate diff.
 
-You are not the implementer. Do not modify files.
+          You are not the implementer. Do not modify files.
 
-Required checks:
-- task acceptance criteria are actually satisfied by the diff;
-- no real Jespersen/private/customer/employee/payroll/Gmail/QuickBooks/workbook/invoice data is present;
-- no secrets or credentials are present;
-- production remains out of scope;
-- no auth/permissions/domains/DNS/money/pricing/destructive/T3 behavior was added;
-- implementation is bounded and reversible;
-- tests/validation are appropriate for the change;
-- no safety/control-plane file was modified;
-- no material unsupported completion claim;
-- for any UI-affecting change, UI-STD-1.0 inheritance is explicit and the design-review gate passes for Product Fit, Hierarchy, Density, Identity, Motion, Structure, Data Presentation, Responsiveness, Accessibility, and Anti-Generic quality. Generic AI SaaS output is a FAIL.
+          Required checks:
+          - task acceptance criteria are actually satisfied by the diff;
+          - no real Jespersen/private/customer/employee/payroll/Gmail/QuickBooks/workbook/invoice data is present;
+          - no secrets or credentials are present;
+          - production remains out of scope;
+          - no auth/permissions/domains/DNS/money/pricing/destructive/T3 behavior was added;
+          - implementation is bounded and reversible;
+          - tests/validation are appropriate for the change;
+          - no safety/control-plane file was modified;
+          - no material unsupported completion claim;
+          - for any UI-affecting change, UI-STD-1.0 inheritance is explicit and the design-review gate passes for Product Fit, Hierarchy, Density, Identity, Motion, Structure, Data Presentation, Responsiveness, Accessibility, and Anti-Generic quality. Generic AI SaaS output is a FAIL.
 
-Return the first line exactly as one of:
-VERDICT: PASS
-VERDICT: FAIL
+          Return the first line exactly as one of:
+          VERDICT: PASS
+          VERDICT: FAIL
 
-Then give concise evidence and required remediation if FAIL.
-"""
+          Then give concise evidence and required remediation if FAIL.
+          """
           pathlib.Path("/tmp/jespersen-agent-review.md").write_text(prompt)
           PY
 
       - name: Run independent Perplexity review
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         env:
-          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          MODEL: "${{ vars.PERPLEXITY_REVIEW_MODEL || 'google/gemini-3.7-flash' }}"
+          PERPLEXITY_API_KEY: "${{ secrets.PERPLEXITY_API_KEY }}"
+          MODEL: "google/gemini-3.7-flash"
         run: |
           set -euo pipefail
-          [ -n "${PERPLEXITY_API_KEY:-}" ] || { echo "PERPLEXITY_API_KEY missing" >&2; exit 1; }
-          python scripts/perplexity_repo_agent.py             --mode review             --prompt-file /tmp/jespersen-agent-review.md             --output-file /tmp/jespersen-agent-review.txt             --model "$MODEL"             --max-output-tokens 6000
+          python scripts/perplexity_repo_agent.py --mode review --prompt-file /tmp/jespersen-agent-review.md --output-file /tmp/jespersen-agent-review.txt --model "$MODEL" --max-output-tokens 6000
 
       - name: Parse independent verdict
         id: verdict
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         run: |
           set -euo pipefail
           first="$(head -n 1 /tmp/jespersen-agent-review.txt | tr -d '\r')"
@@ -266,28 +250,27 @@ Then give concise evidence and required remediation if FAIL.
           esac
 
       - name: Comment independent review
+        if: "${{ steps.changed.outputs.changed == 'true' }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
-        run: |
-          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/jespersen-agent-review.txt
+          GH_TOKEN: "${{ github.token }}"
+          PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
+        run: gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/jespersen-agent-review.txt
 
       - name: Merge independently accepted change
-        if: steps.verdict.outputs.pass == 'true'
+        if: "${{ steps.changed.outputs.changed == 'true' && steps.verdict.outputs.pass == 'true' }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
-          ISSUE_NUMBER: ${{ needs.implement.outputs.issue_number }}
+          GH_TOKEN: "${{ github.token }}"
+          PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           set -euo pipefail
           gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --comment "Independent cross-model QA passed and the bounded change was merged to main."
 
       - name: Leave failed review open
-        if: steps.verdict.outputs.pass != 'true'
+        if: "${{ steps.changed.outputs.changed == 'true' && steps.verdict.outputs.pass != 'true' }}"
         env:
-          GH_TOKEN: ${{ github.token }}
-          ISSUE_NUMBER: ${{ needs.implement.outputs.issue_number }}
-          PR_NUMBER: ${{ needs.implement.outputs.pr_number }}
-        run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Independent QA failed for PR #$PR_NUMBER. The PR remains unmerged and requires remediation."
+          GH_TOKEN: "${{ github.token }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
+          PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
+        run: gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Independent QA failed for PR #$PR_NUMBER. The PR remains unmerged and requires remediation."
