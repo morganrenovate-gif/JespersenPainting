@@ -20,10 +20,16 @@ Acceptance:
 
 ### CONTROL-002 — Persistent autonomous coding runtime
 Priority: P0
-Status: TODO
+Status: IN_PROGRESS
 
 Goal:
 Connect a persistent coding/build runtime to GitHub and an authorized Hedy non-production lane so the Build Director can continue without an active chat session.
+
+Current:
+- bounded GitHub Actions Codex executor implemented on setup branch;
+- event-driven Mission Controller implemented to select the next eligible public-safe T0/T1 backlog task after each accepted agent PR;
+- final activation requires the repository Actions secret `OPENAI_API_KEY`;
+- Hedy staging deployment remains a separate controlled lane and is not falsely represented as wired yet.
 
 Acceptance:
 - can read repo/contracts;
