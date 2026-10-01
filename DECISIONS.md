@@ -49,3 +49,14 @@ Avoid parallel/stale-revision deploys. Capture pre-change state, use concurrency
 Status: Accepted
 
 Do not call a capability complete merely because code exists. Require deployed/tested evidence or a durable runtime record.
+
+
+## D-011 — Codex is the bounded Product Engineering executor
+Status: Accepted
+
+Use the official pinned Codex GitHub Action as the repository coding executor. The Mission Controller owns task selection and bounded dispatch; Codex implements on an isolated branch; a fresh read-only Codex run performs independent QA before automated merge. Codex is an execution lane, not a new governance agent.
+
+## D-012 — Mission Controller is event-driven, not hourly
+Status: Accepted
+
+After an accepted autonomous PR merges, the Mission Controller immediately re-reads the durable project contracts/backlog and dispatches the next eligible public-safe T0/T1 repository task. It stops when no eligible task exists or when work requires private runtime evidence/T3 authority. This avoids arbitrary hourly one-task polling.
