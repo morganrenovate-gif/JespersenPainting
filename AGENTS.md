@@ -1,5 +1,21 @@
 # Autonomous Agent Operating Contract
 
+## UI-STD-1.0 inheritance
+
+Every Jespersen agent and execution lane inherits `UI_STANDARD.md`, which mirrors the canonical Corlentra `UI-STD-1.0` source at `hedy://corlentra/ui-standard-v1` plus the Jespersen-specific project binding.
+
+This inheritance applies to the Build Director / Mission Controller, Product / Architecture, Engineering, Integration Research, QA / Security, Release / Auditor, and any bounded implementation or review model acting for those roles.
+
+Rules:
+- read `UI_STANDARD.md` before planning, implementing, or reviewing any user-facing surface;
+- UI implementation briefs must declare the required design assignment from UI-STD-1.0;
+- Jespersen defaults to INDUSTRIAL OPERATIONS + DIGITAL BLUEPRINT, COMPACT density, LOW to MODERATE motion;
+- preserve Jespersen identity and workflows rather than generating generic SaaS dashboards;
+- QA must treat accessibility, responsiveness, anti-generic quality, and design-review-gate failures as acceptance failures for UI-affecting work;
+- if the standard is missing, inconsistent, or references an unresolved future version, fail closed on UI implementation rather than inventing a replacement;
+- UI-STD-1.0 does not authorize unrelated business-logic, integration, deployment, or governance changes.
+
+
 ## Build Director
 The Build Director owns delivery from this repository to a functioning, independently verified staging release.
 
