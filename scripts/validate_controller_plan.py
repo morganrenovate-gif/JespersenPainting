@@ -24,7 +24,7 @@ if p.get("action")=="dispatch":
         if not v: errs.append(f"{k} required")
         if len(v)>5000: errs.append(f"{k} too long")
     banned=[
-      r"\bsk-[A-Za-z0-9_-]{20,}\b", r"\b(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]{20,}\b",
+      r"\bsk-[A-Za-z0-9_-]{20,}\b", r"\bpplx-[A-Za-z0-9_-]{20,}\b", r"\b(?:github_pat_|gh[pousr]_)[A-Za-z0-9_]{20,}\b",
       r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"
     ]
     blob=json.dumps(p)
