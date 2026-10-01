@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   select-next:
-    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Agent: issue #'))
+    if: "${{ github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Agent: issue #')) }}"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout trusted main
@@ -77,7 +77,7 @@ jobs:
         if: steps.active.outputs.count == '0'
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
-          MODEL: ${{ vars.PERPLEXITY_CONTROLLER_MODEL || 'openai/gpt-6-luna' }}
+          MODEL: "${{ vars.PERPLEXITY_CONTROLLER_MODEL || 'openai/gpt-6-luna' }}"
         run: |
           set -euo pipefail
           python scripts/perplexity_repo_agent.py             --mode controller             --prompt-file /tmp/mission-controller.md             --output-file /tmp/controller-plan.json             --model "$MODEL"             --service-tier flex             --max-output-tokens 3000
