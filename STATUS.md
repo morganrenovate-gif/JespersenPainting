@@ -54,13 +54,13 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 ## Autonomous build status
 - Prior hourly Jespersen Mission Worker: disabled.
 - DropRadar-style Build Director model: control-plane contracts committed and verified.
-- Repository-side persistent coding runtime: implementation prepared using pinned official Codex GitHub Action plus an independent read-only Codex QA pass.
+- Repository-side persistent coding runtime: implementation prepared using Perplexity Agent API with bounded local repository tools plus independent cross-model QA.
 - Event-driven Mission Controller: implementation prepared to choose one eligible acceptance-linked T0/T1 repository task after each accepted agent PR and dispatch the next issue automatically.
-- Activation blocker: GitHub Actions repository secret `OPENAI_API_KEY` is not yet established/verified.
+- Activation credential: user reports GitHub Actions repository secret `PERPLEXITY_API_KEY` is stored; workflow smoke test remains outstanding.
 - Hedy deployment/runtime execution remains a separate controlled lane; repository automation must not be represented as Hedy staging autonomy until that lane is independently wired and verified.
 
 ## Immediate next work
-1. Activate and smoke-test the prepared repository Codex runtime by provisioning `OPENAI_API_KEY` in GitHub Actions.
+1. Merge and smoke-test the prepared Perplexity-backed repository runtime.
 2. Verify Mission Controller -> issue -> Codex branch -> safety gate -> PR -> independent QA -> merge -> next-task chain.
 3. Wire the separate safe Hedy non-production execution lane.
 4. Load/maintain the acceptance-linked backlog.
