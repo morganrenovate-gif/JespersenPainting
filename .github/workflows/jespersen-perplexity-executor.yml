@@ -93,7 +93,7 @@ jobs:
           task = json.loads(pathlib.Path("/tmp/jespersen-agent-task.json").read_text())
           prompt = f"""You are the bounded Product Engineering implementation executor for Jespersen Painting Intelligence.
 
-Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md before changing anything.
+Read PROJECT.md, PRODUCT_SPEC.md, ACCEPTANCE.md, CONSTRAINTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, AGENTS.md, RUNBOOK.md, STATUS.md, BACKLOG.md, DECISIONS.md, FOUNDER_ACTIONS.md, and AUTONOMY_EXECUTOR.md before changing anything.
 
 Task source: public GitHub issue #{os.environ['ISSUE_NUMBER']}
 Title: {task['title']}
@@ -110,6 +110,7 @@ Hard execution rules:
 - Never add credentials, tokens, private keys, OAuth material, or local machine paths.
 - Control-plane files are tool-protected and must not be modified.
 - Preserve production as out of scope.
+- UI_STANDARD.md / UI-STD-1.0 is inherited by this executor. Any user-facing UI work must follow the Jespersen Industrial Operations + Digital Blueprint profile, required design assignment, accessibility/responsive rules, and anti-generic review gate. If UI_STANDARD.md is missing or inconsistent, do not implement UI.
 - Implement the smallest complete change that satisfies the task acceptance criteria.
 - Add or update appropriate tests when useful. A trusted workflow step runs executable tests after you finish; do not claim they passed before that evidence exists.
 - Do not commit, push, open a pull request, merge, or attempt network/GitHub/Hedy actions.
@@ -219,7 +220,7 @@ $result"
 
 Review pull request #{os.environ['PR_NUMBER']} implementing issue #{os.environ['ISSUE_NUMBER']}.
 
-Read AGENTS.md, DATA_BOUNDARY.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, the task in BACKLOG.md, and the complete diff using repository tools.
+Read AGENTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, the task in BACKLOG.md, and the complete diff using repository tools.
 
 You are not the implementer. Do not modify files.
 
@@ -232,7 +233,8 @@ Required checks:
 - implementation is bounded and reversible;
 - tests/validation are appropriate for the change;
 - no safety/control-plane file was modified;
-- no material unsupported completion claim.
+- no material unsupported completion claim;
+- for any UI-affecting change, UI-STD-1.0 inheritance is explicit and the design-review gate passes for Product Fit, Hierarchy, Density, Identity, Motion, Structure, Data Presentation, Responsiveness, Accessibility, and Anti-Generic quality. Generic AI SaaS output is a FAIL.
 
 Return the first line exactly as one of:
 VERDICT: PASS
