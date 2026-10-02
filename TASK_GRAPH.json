@@ -26,7 +26,7 @@
     "TIME-002": {
       "repositoryEligible": true,
       "dependencies": [
-        "CONTROL-002"
+        "CONTROL-001"
       ]
     },
     "TIME-003": {
@@ -53,19 +53,19 @@
     "DATA-001": {
       "repositoryEligible": true,
       "dependencies": [
-        "CONTROL-002"
+        "CONTROL-001"
       ]
     },
     "DATA-002": {
       "repositoryEligible": true,
       "dependencies": [
-        "CONTROL-002"
+        "CONTROL-001"
       ]
     },
     "DATA-003": {
       "repositoryEligible": true,
       "dependencies": [
-        "CONTROL-002"
+        "CONTROL-001"
       ]
     },
     "DATA-004": {
@@ -137,7 +137,7 @@
     "EST-001": {
       "repositoryEligible": true,
       "dependencies": [
-        "CONTROL-002"
+        "CONTROL-001"
       ]
     },
     "EST-002": {
