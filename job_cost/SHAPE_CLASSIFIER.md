@@ -1,6 +1,6 @@
 # DATA-002: workbook shape classifier (repository-only)
 
-`job_cost.shape_classifier` takes **structural metadata supplied by a future scanner**, not a workbook path or file. It has no file access, dependencies, adapter dispatch, normalization or financial calculations. Its registry currently contains **invented synthetic exemplars only** (`synthetic-ledger/v1` and `synthetic-ledger/v2`); these are not assertions about any Jespersen workbook structure and must not be used to claim live shape coverage.
+`job_cost.shape_classifier` takes **structural metadata supplied by a future scanner**, not a workbook path or file. It has no file access, dependencies, normalization or financial calculations. Its registry currently contains **invented synthetic exemplars only** (`synthetic-ledger/v1` and `synthetic-ledger/v2`); these are not assertions about any Jespersen workbook structure and must not be used to claim live shape coverage.
 
 ## Input and signature contract
 
@@ -8,7 +8,7 @@ Supply `WorkbookStructure(sheets, complete=True)` with a complete inventory of s
 
 `structural_signature` returns `workbook-structure/v1:<sha256>` for valid complete input: SHA-256 over UTF-8 compact JSON of `["workbook-structure/v1", sorted sheets]`, where each sheet is `[name, sorted [[address, literal heading], ...]]`. JSON uses `ensure_ascii=True` and `separators=(",", ":")`; sorting is lexicographic by sheet name and header address. Enumeration order has no effect. Invalid/incomplete input returns `None`. Changes to the scan contract or canonicalization require a new signature version and explicit registry entries, not implicit remapping.
 
-`classify_shape` returns `ShapeClassification(state, shape_version, signature, review_reason)`. An exact registered signature returns `known` with an explicit version and no reason. A valid but unregistered signature returns `unknown`, no version and `unrecognized_shape`; incomplete/invalid metadata returns `unknown`, no version, no signature and `insufficient_metadata`. Both unknown cases require review. There is **no adapter identifier** in the result, and this module never picks one. Future adapter selection (DATA-004) must be separately authorized and must not select any adapter for an unknown result.
+`classify_shape` returns `ShapeClassification(state, shape_version, signature, review_reason)`. An exact registered signature returns `known` with an explicit version and no reason. A valid but unregistered signature returns `unknown`, no version and `unrecognized_shape`; incomplete/invalid metadata returns `unknown`, no version, no signature and `insufficient_metadata`. Both unknown cases require review. There is **no adapter identifier** in the classification result, and this module never picks one. The separate DATA-004 `job_cost.adapters` layer selects synthetic-only adapters from known classifications; it does not select any adapter for an unknown result. See `ADAPTERS.md`.
 
 ## Limits
 
