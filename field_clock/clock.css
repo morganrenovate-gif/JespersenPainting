@@ -16,9 +16,10 @@ h2 { font-size: 1.1rem; }
 .mast { border-bottom: 3px solid var(--primary); padding-bottom: 14px; }
 .eyebrow, .step, footer { color: var(--secondary); font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .eyebrow { margin-bottom: 6px; }
-.work, .shift { background: var(--surface); border: var(--weight) solid var(--border); padding: 18px; }
+.work, .shift, .sync { background: var(--surface); border: var(--weight) solid var(--border); padding: 18px; }
 .work { margin-top: 16px; border-left: 4px solid var(--primary); }
 .shift { border-top: 0; border-left: 4px solid var(--success); }
+.sync { border-top: 0; border-left: 4px solid var(--information); }
 .step { margin-bottom: 8px; font-variant-numeric: tabular-nums; }
 .job-name { font-size: clamp(1.3rem, 5vw, 1.7rem); font-weight: 700; overflow-wrap: anywhere; margin-top: 10px; }
 .hint, .start, .finished { color: var(--muted); margin-top: 6px; }
@@ -27,20 +28,26 @@ legend { font-weight: 700; margin-bottom: 8px; }
 .job-choice { display: flex; align-items: center; min-height: var(--row); gap: var(--gap); border: 1px solid var(--border); border-bottom: 0; padding: 10px 12px; cursor: pointer; overflow-wrap: anywhere; }
 .job-choice:last-child { border-bottom: 1px solid var(--border); }
 .job-choice:has(input:checked) { background: #e5e9e1; border-left: 4px solid var(--primary); font-weight: 700; }
-input[type="radio"] { accent-color: var(--primary); width: 22px; height: 22px; flex: none; }
+input[type="radio"], input[type="checkbox"] { accent-color: var(--primary); width: 22px; height: 22px; flex: none; }
 .empty { color: var(--critical); font-weight: 700; margin-top: 12px; }
 .status { color: var(--success); font-weight: 700; margin-top: 12px; }
 .running-label { margin-top: 12px; font-weight: 700; overflow-wrap: anywhere; }
 .timer { font-size: clamp(2.8rem, 12vw, 4rem); font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 8px; }
 time { font-variant-numeric: tabular-nums; }
-.action { display: block; width: 100%; min-height: 64px; border: 2px solid var(--primary); border-radius: var(--radius); background: var(--primary); color: var(--surface); font: inherit; font-size: 1.25rem; font-weight: 700; cursor: pointer; margin-top: 18px; }
-.action:hover:not(:disabled) { background: var(--secondary); }
-.action:disabled { background: #e5e9e1; color: var(--muted); border-color: var(--border); cursor: not-allowed; }
+.action, .retry { display: block; width: 100%; min-height: 64px; border: 2px solid var(--primary); border-radius: var(--radius); background: var(--primary); color: var(--surface); font: inherit; font-size: 1.25rem; font-weight: 700; cursor: pointer; margin-top: 18px; }
+.retry { min-height: 52px; font-size: 1rem; background: var(--surface); color: var(--primary); }
+.action:hover:not(:disabled), .retry:hover:not(:disabled) { background: var(--secondary); color: var(--surface); }
+.action:disabled, .retry:disabled { background: #e5e9e1; color: var(--muted); border-color: var(--border); cursor: not-allowed; }
 button:focus-visible, input:focus-visible, .skip:focus-visible { outline: 3px solid var(--information); outline-offset: 3px; }
 .skip { position: absolute; transform: translateY(-200%); background: var(--surface); padding: 10px; z-index: 2; }
 .skip:focus { transform: none; }
-.preview { border: 1px solid var(--warning); color: var(--warning); padding: 10px 12px; margin-top: 16px; font-weight: 700; }
+.preview { border: 2px solid var(--warning); color: var(--warning); padding: 10px 12px; margin-top: 16px; font-weight: 700; }
+.sync-status { margin-top: 12px; padding: 10px; border-left: 3px solid var(--information); background: var(--background); font-weight: 700; font-variant-numeric: tabular-nums; }
+.sync-pending { border-color: var(--warning); color: var(--warning); }
+.sync-error { border-color: var(--critical); color: var(--critical); }
+.sync-ok { border-color: var(--success); color: var(--success); }
+.connection { display: flex; align-items: center; min-height: var(--row); gap: var(--gap); margin-top: 12px; cursor: pointer; }
 footer { margin-top: auto; padding-top: 18px; }
 [hidden] { display: none !important; }
-@media (max-width: 420px) { .work, .shift { padding: 14px; } }
+@media (max-width: 420px) { .work, .shift, .sync { padding: 14px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

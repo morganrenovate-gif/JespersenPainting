@@ -1,4 +1,4 @@
-"""Synthetic-only TIME-003 field clock structure and interaction checks."""
+"""Synthetic-only TIME-004 field clock structure and interaction checks."""
 import shutil
 import subprocess
 import unittest
@@ -60,9 +60,16 @@ class FieldClockViewTests(unittest.TestCase):
         tree = ClockMarkup()
         tree.feed(html)
         self.assertEqual(tree.find('p', 'status')['role'], 'status')
+        self.assertEqual(tree.find('p', 'sync-status')['role'], 'status')
+        self.assertEqual(tree.find('p', 'sync-status')['aria-live'], 'polite')
         self.assertEqual(tree.find('p', 'elapsed')['role'], 'timer')
         self.assertEqual(tree.find('time', 'started'), {})
         self.assertEqual(tree.find('div', 'running')['hidden'], None)
+        self.assertEqual(tree.find('button', 'retry')['disabled'], None)
+        self.assertEqual(tree.find('input', 'connection')['type'], 'checkbox')
+        self.assertIn('src="pending.js" defer', html)
+        self.assertLess(html.index('src="pending.js"'), html.index('src="clock.js"'))
+        self.assertIn('Not a work-time record', html)
         self.assertIn('name="viewport"', html)
         self.assertIn('href="#main"', html)
         self.assertNotIn('QuickBooks', html)
@@ -71,7 +78,8 @@ class FieldClockViewTests(unittest.TestCase):
         css = stylesheet()
         for expected in ('min-height: 64px', 'min-height: var(--row)', ':focus-visible',
                          'prefers-reduced-motion: reduce', 'safe-area-inset-bottom',
-                         'font-variant-numeric: tabular-nums', '[hidden]'):
+                         'font-variant-numeric: tabular-nums', '[hidden]', '.sync-pending',
+                         '.sync-error'):
             self.assertIn(expected, css)
 
     @unittest.skipUnless(shutil.which('node'), 'Node unavailable; browser interaction checks require Node')
