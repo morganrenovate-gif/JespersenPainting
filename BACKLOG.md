@@ -2,6 +2,8 @@
 
 Status values: TODO, IN_PROGRESS, BLOCKED_EXTERNAL, QA, PASS.
 
+`QA` means the bounded repository implementation has merged and is no longer eligible for another autonomous task with the same ID; integrated/live acceptance may still be outstanding.
+
 Priority:
 - P0 = blocks operating foundation
 - P1 = required for Mission 01 acceptance
@@ -57,7 +59,7 @@ Constraints:
 
 ### TIME-002 — Employee/job identity mapping
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 - suggestions are reviewable;
@@ -101,7 +103,7 @@ Cases:
 
 ### DATA-001 — Corpus inventory contract
 Priority: P0
-Status: TODO
+Status: QA
 
 Goal:
 Inventory the 350+ real workbooks in governed storage without putting them in public GitHub.
@@ -115,7 +117,7 @@ Acceptance:
 
 ### DATA-002 — Workbook shape classifier
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 - identifies materially different workbook structures;
@@ -124,7 +126,7 @@ Acceptance:
 
 ### DATA-003 — Normalized job-cost schema
 Priority: P0
-Status: TODO
+Status: QA
 
 Model:
 - job;
@@ -138,7 +140,7 @@ Model:
 
 ### DATA-004 — Versioned workbook adapters
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 - adapter version stored;
@@ -147,7 +149,7 @@ Acceptance:
 
 ### DATA-005 — Batch importer
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 - designed for 350+ files;
@@ -158,7 +160,7 @@ Acceptance:
 
 ### DATA-006 — Independent recomputation
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 - labor recomputed;
@@ -203,7 +205,7 @@ Acceptance:
 
 ### ECON-001 — Source-separated economics model
 Priority: P1
-Status: TODO
+Status: QA
 
 Inputs remain distinct:
 - estimate;
@@ -216,7 +218,7 @@ Inputs remain distinct:
 
 ### ECON-002 — Conflict/staleness model
 Priority: P1
-Status: TODO
+Status: QA
 
 Acceptance:
 - missing source visible;
@@ -260,7 +262,7 @@ Real PASS requires a matching completed plan set and actuals.
 
 ### QA-001 — Public-repo sensitive-data gate
 Priority: P0
-Status: TODO
+Status: QA
 
 Acceptance:
 secret/PII/private-client-data checks block unsafe commits.

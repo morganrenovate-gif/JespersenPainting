@@ -1,19 +1,21 @@
 # Jespersen Painting Intelligence Status
 
 ## Phase
-AUTONOMOUS RUNTIME WIRING
+AUTONOMOUS PRODUCT BUILD
 
 ## Current objective
-Replace the prior hourly one-task worker pattern with the DropRadar-style backlog-driven autonomous build model while preserving the existing Jespersen Intelligence runtime and production boundary.
+Continue acceptance-linked Jespersen repository work through the bounded autonomous lane without repeating completed task IDs, while keeping private integrations, Hedy staging acceptance, and production promotion in their separately governed lanes.
 
 ## GitHub
 - Repository: `morganrenovate-gif/JespersenPainting`
 - Visibility: public
 - Default branch: `main`
-- GitHub is the durable project/source-control plane.
-- Real Jespersen client data is prohibited from this public repository.
-- Project contracts are committed and verified.
-- Public-repository sensitive-data contract is committed and verified.
+- GitHub is the durable public-safe source-control and autonomous execution plane.
+- Real Jespersen client data is prohibited from this repository.
+- Project contracts, data boundary, protected control-plane rules, and UI-STD-1.0 inheritance are committed.
+- The Mission Controller -> issue -> executor -> trusted checks -> safety gate -> PR -> independent QA -> merge -> next-controller chain has been observed end to end.
+- Repository task routing now derives state from `BACKLOG.md`, `TASK_GRAPH.json`, durable `[AGENT]` issue state, and merged Agent PR evidence rather than relying on model memory alone.
+- A terminal failed executor attempt is isolated and must not leave the whole queue blocked.
 
 ## Hedy
 - Project: Jespersen Intelligence
@@ -23,60 +25,68 @@ Replace the prior hourly one-task worker pattern with the DropRadar-style backlo
 - Production host: `jespersen-control--morgan-apps.apps.hedyassist.com`
 - Staging active revision at bootstrap: `apprev_1790279182138_5c57cf83b19d4532b18a4e8f00dd2090`
 - Production active revision at bootstrap: `apprev_1790184846748_3fcceb3f77474d70a5650129ccd30325`
-- Production is outside autonomous build authority.
+- Staging authentication is enabled for the existing Jespersen login surface; production remains outside autonomous build authority.
+- Hedy deployment/runtime execution remains a separate controlled lane from the public GitHub coding executor.
 
 ## Current product state
 
 ### Time / QuickBooks
 - Existing QuickBooks connection foundation is present.
-- Fresh employee/provider reads still require integration repair/verification.
-- Field-clock foundation exists but still needs the accepted low-friction HoursTracker-familiar UX and full adversarial QA.
+- Fresh customer/job and employee provider reads still require integration repair/verification.
+- A repository-only employee/job identity suggestion model has merged and is in QA; it does not claim live-provider acceptance.
+- Field-clock UX, offline/pending sync, and adversarial time QA remain open.
 - QuickBooks writes are not generally authorized.
 
 ### Historical job costing
-- Jespersen has 350+ Excel job-cost workbooks available for historical intelligence.
-- Real workbooks must remain outside this public GitHub repository.
-- Initial reviewed examples show that source workbook formulas/totals cannot be assumed canonical.
-- Batch importer, workbook-shape adapters, provenance, and independent recomputation remain build work.
+- Jespersen has 350+ Excel job-cost workbooks available outside this public repository.
+- Repository implementations have merged for the normalized schema, workbook-shape classifier, versioned adapters, batch coordination, corpus inventory contract, and deterministic recomputation.
+- These items are in repository QA, not live-corpus acceptance.
+- Real workbook inventory, governed-storage ingestion, representative reconciliation, and source-vs-recomputed validation remain outstanding.
+- Workbook source totals are evidence and are not assumed canonical.
 
 ### Gmail / material evidence
 - Read-only integration groundwork exists.
-- Full source-attributed invoice/material extraction and production-grade reconciliation remain incomplete.
-- Gmail writes are not part of this build phase.
+- Full authorized source retrieval and source-attributed invoice/material extraction remain incomplete.
+- Gmail writes are outside this build phase.
 
 ### Job economics
-- Source-separated job economics remains a required build workstream.
+- Repository implementations for source-separated job economics and conflict/staleness findings have merged and are in QA.
+- The owner-facing job-economics view remains open.
+- QuickBooks remains the accounting source of truth.
 
 ### Estimator
-- Estimator architecture/backtest work remains incomplete.
-- A meaningful real backtest requires a complete plan set plus matching completed-job actuals.
+- Estimator taxonomy, deterministic-rule boundary, and backtest harness remain open.
+- A meaningful real backtest still requires a complete plan set plus matching completed-job actuals.
 
 ## UI architecture standard
 - Canonical UI standard: UI-STD-1.0 at `hedy://corlentra/ui-standard-v1`.
 - Repository mirror: `UI_STANDARD.md`.
 - Jespersen profile: Industrial Operations + Digital Blueprint; compact; low-to-moderate motion.
 - Mission Controller, implementation executor, specialist registry, and independent QA are bound to this standard.
-- UI work fails closed if the standard is missing/unresolved and generic AI SaaS output is not accepted.
+- User-facing tasks must include the complete design assignment and fail closed on generic AI SaaS output, accessibility failure, or unresolved UI-standard context.
 
 ## Autonomous build status
 - Prior hourly Jespersen Mission Worker: disabled.
-- DropRadar-style Build Director model: control-plane contracts committed and verified.
-- Repository-side persistent coding runtime: implementation prepared using Perplexity Agent API with bounded local repository tools plus independent cross-model QA.
-- Event-driven Mission Controller: implementation prepared to choose one eligible acceptance-linked T0/T1 repository task after each accepted agent PR and dispatch the next issue automatically.
-- Activation credential: user reports GitHub Actions repository secret `PERPLEXITY_API_KEY` is stored; workflow smoke test remains outstanding.
-- Hedy deployment/runtime execution remains a separate controlled lane; repository automation must not be represented as Hedy staging autonomy until that lane is independently wired and verified.
+- DropRadar-style event-driven repository runtime: active and smoke-tested.
+- Perplexity implementation executor: active, bounded to public-safe T0/T1 repository work.
+- Independent cross-model QA: active before autonomous merge.
+- Runtime task ledger: derived from durable issue/PR evidence and a protected dependency graph.
+- Completed or QA task IDs are not eligible for automatic reselection.
+- Terminal failed attempts are marked non-completed and the controller may continue unrelated eligible work.
+- Protected control-plane work cannot be assigned to the bounded implementation model.
+- CONTROL-002 remains IN_PROGRESS because the separate Hedy non-production execution lane is not yet fully autonomous.
+- Production promotion remains prohibited without its own governed authorization.
 
 ## Immediate next work
-1. Merge and smoke-test the prepared Perplexity-backed repository runtime.
-2. Verify Mission Controller -> issue -> Perplexity implementation branch -> safety gate -> PR -> independent QA -> merge -> next-task chain.
-3. Wire the separate safe Hedy non-production execution lane.
-4. Load/maintain the acceptance-linked backlog.
-5. Resolve or isolate the QuickBooks provider-read blocker.
-6. Continue independent TIME/DATA work even if one provider dependency is blocked.
-7. Build the 350+ workbook ingestion architecture outside public GitHub data storage.
-8. Reach independently verified staging acceptance.
+1. Finish and verify the Mission Controller ledger/failure-recovery control-plane repair.
+2. Resume the controller from the remaining eligible repository tasks without repeating completed IDs.
+3. Continue repository-safe TIME, ECON, and EST work according to dependency eligibility.
+4. Repair/verify the separate QuickBooks read path.
+5. Wire the governed Hedy non-production execution/acceptance lane.
+6. Ingest and reconcile the real 350+ workbook corpus outside public GitHub.
+7. Reach full staging acceptance before any production promotion.
 
 ## Founder action required
-None for documentation/control-plane bootstrap after the exact approval already granted.
+None for routine bounded repository work under the active Jespersen autonomy scope.
 
-Any later production promotion, sensitive credential action, provider write, or other consequential scope expansion requires its own governed authorization.
+Production promotion, authentication/permission changes, credentials/secrets, provider writes, money/pricing, domains/DNS, external communication, destructive actions, or other Tier 3 scope require their own governed authorization.

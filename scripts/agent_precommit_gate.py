@@ -16,6 +16,11 @@ PROTECTED = {
     "scripts/run_repo_checks.py",
     "scripts/validate_agent_task.py",
     "scripts/validate_controller_plan.py",
+    "scripts/build_task_ledger.py",
+    "TASK_GRAPH.json",
+    "BACKLOG.md",
+    "STATUS.md",
+    "AUTONOMY_EXECUTOR.md",
     "AGENTS.md",
     "DATA_BOUNDARY.md",
     "UI_STANDARD.md",
@@ -40,6 +45,25 @@ SECRET_PATTERNS = [
     ("Bearer credential", re.compile(r"\bBearer\s+[A-Za-z0-9._~+/-]{20,}={0,2}\b", re.I)),
     ("Private key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----")),
     ("SSN-like value", re.compile(r"(?<!\d)\d{3}-\d{2}-\d{4}(?!\d)")),
+    (
+        "labeled date of birth",
+        re.compile(
+            r"\b(?:date\s+of\s+birth|birth\s+date|dob)\s*[:=]\s*"
+            r"(?:0?[1-9]|1[0-2])[-/](?:0?[1-9]|[12]\d|3[01])[-/](?:19|20)\d{2}\b",
+            re.I,
+        ),
+    ),
+    (
+        "labeled bank routing number",
+        re.compile(r"\b(?:routing(?:\s+number)?|aba)\s*[:=]\s*\d{9}\b", re.I),
+    ),
+    (
+        "labeled bank account number",
+        re.compile(
+            r"\b(?:bank\s+)?account(?:\s+(?:number|no\.?))?\s*[:=]\s*\d{6,17}\b",
+            re.I,
+        ),
+    ),
 ]
 
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b", re.I)

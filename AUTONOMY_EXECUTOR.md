@@ -8,8 +8,8 @@ The Jespersen Mission Controller owns the outcome and backlog. The Perplexity-ba
 
 ## Flow
 
-1. Mission Controller reads the durable project contracts and backlog.
-2. It selects one highest-value eligible public-safe T0/T1 repository task.
+1. Mission Controller reads the durable project contracts, `TASK_GRAPH.json`, and a runtime ledger derived from `BACKLOG.md`, prior `[AGENT]` issues, and merged Agent PRs.
+2. It selects one highest-value eligible public-safe T0/T1 repository task whose runtime state is `TODO`, whose dependencies are satisfied, and whose task ID has not already completed or terminally failed.
 3. It creates an issue beginning with `[AGENT]`.
 4. The executor validates the task envelope and trigger actor before the provider secret is exposed to the agent step.
 5. The implementation model works only through bounded repository read/write tools on an isolated Git branch.
@@ -18,10 +18,11 @@ The Jespersen Mission Controller owns the outcome and backlog. The Perplexity-ba
 8. The public-repository data gate runs before any commit.
 9. A pull request is opened.
 10. A separate model/provider performs read-only independent QA.
-11. PASS automatically squash-merges the PR and closes the task.
-12. That merge immediately triggers Mission Controller to select the next eligible task.
+11. PASS automatically squash-merges the PR and closes the task as completed.
+12. That merge immediately triggers Mission Controller to rebuild the runtime ledger and select the next eligible task.
+13. A no-change result, independent-QA rejection, or other terminal executor failure closes that attempt as not planned, emits `jespersen_executor_failed`, and allows the controller to continue unrelated eligible work instead of deadlocking on an open issue.
 
-The loop is event-driven, not hourly.
+The loop is event-driven, not hourly. A task ID is not automatically retried after completion or terminal failure; remediation that materially changes the work must be represented by a governed control-plane repair or a new backlog task ID.
 
 ## Required issue envelope
 
@@ -97,13 +98,15 @@ Implementation receives only bounded tools for:
 - writing non-protected UTF-8 files;
 - deleting non-protected files.
 
-Control-plane paths under `.github/`, the autonomous executor itself, data-boundary rules, agent contract, validators, and safety gates are protected.
+Control-plane paths under `.github/`, the autonomous executor itself, `TASK_GRAPH.json`, task-ledger logic, backlog/status control records, data-boundary rules, agent contract, validators, and safety gates are protected.
 
 Executable tests are run by a trusted workflow step **after** the provider-key process exits.
 
 ## Safety controls
 
 - only repository writers or the trusted GitHub Actions bot may trigger execution;
+- Mission Controller routing is machine-checked against the derived runtime ledger and dependency graph before an issue can be created;
+- completed, QA, blocked, in-progress, dependency-blocked, protected-control-plane, and externally gated tasks are ineligible for automatic dispatch;
 - issue envelopes are validated before model execution;
 - public-repo data and secret scanners fail closed;
 - private-data-prone/binary file types are blocked from autonomous commits;
@@ -129,4 +132,4 @@ The repository-side loop becomes active when:
 2. `PERPLEXITY_API_KEY` exists as a GitHub Actions repository secret;
 3. Mission Controller is manually dispatched once for the smoke test.
 
-CONTROL-002 remains IN_PROGRESS until the first complete Mission Controller -> task -> implementation -> safety -> independent QA -> merge -> next-controller cycle is observed.
+The first complete Mission Controller -> task -> implementation -> safety -> independent QA -> merge -> next-controller cycle has been observed. CONTROL-002 remains IN_PROGRESS only because the separate Hedy non-production execution lane is not yet fully autonomous.

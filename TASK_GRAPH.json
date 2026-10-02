@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Static dependency and routing constraints for the Jespersen Mission Controller. Runtime task state is derived from BACKLOG.md plus durable GitHub issue/PR evidence.",
+  "repositoryReadyStates": [
+    "PASS",
+    "QA"
+  ],
+  "tasks": {
+    "CONTROL-001": {
+      "repositoryEligible": false,
+      "dependencies": []
+    },
+    "CONTROL-002": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "TIME-001": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-002"
+      ],
+      "reason": "Requires authorized live provider reads."
+    },
+    "TIME-002": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "TIME-003": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "TIME-002"
+      ],
+      "userFacing": true
+    },
+    "TIME-004": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "TIME-003"
+      ],
+      "userFacing": true
+    },
+    "TIME-005": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "TIME-003",
+        "TIME-004"
+      ]
+    },
+    "DATA-001": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "DATA-002": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "DATA-003": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "DATA-004": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "DATA-002",
+        "DATA-003"
+      ]
+    },
+    "DATA-005": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "DATA-001",
+        "DATA-004"
+      ]
+    },
+    "DATA-006": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "DATA-003"
+      ]
+    },
+    "DATA-007": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "DATA-001",
+        "DATA-002",
+        "DATA-003",
+        "DATA-004",
+        "DATA-005",
+        "DATA-006"
+      ],
+      "reason": "Requires representative real-workbook reconciliation evidence outside the public repository."
+    },
+    "GMAIL-001": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-002"
+      ],
+      "reason": "Requires an authorized live mailbox/source path."
+    },
+    "GMAIL-002": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "GMAIL-001"
+      ],
+      "reason": "Full acceptance depends on the authorized source path; create a separately scoped repository task if a synthetic extractor slice is needed."
+    },
+    "ECON-001": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "DATA-003"
+      ]
+    },
+    "ECON-002": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "ECON-001"
+      ]
+    },
+    "ECON-003": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "ECON-001",
+        "ECON-002"
+      ],
+      "userFacing": true
+    },
+    "EST-001": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
+    "EST-002": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "EST-001"
+      ]
+    },
+    "EST-003": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "EST-001",
+        "EST-002",
+        "DATA-006"
+      ]
+    },
+    "QA-001": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-001"
+      ],
+      "protectedControlPlane": true,
+      "reason": "Safety-gate implementation is protected control-plane work and cannot be selected by the bounded implementation lane."
+    },
+    "QA-002": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-002"
+      ],
+      "reason": "Requires tenant/auth/isolation evidence in an authorized non-production runtime."
+    },
+    "QA-003": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "CONTROL-002"
+      ],
+      "reason": "Requires Hedy staging revision/rollback evidence."
+    },
+    "QA-004": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "QA-001",
+        "QA-002",
+        "QA-003"
+      ],
+      "reason": "Requires integrated staging acceptance."
+    },
+    "RELEASE-001": {
+      "repositoryEligible": false,
+      "dependencies": [
+        "QA-004"
+      ],
+      "reason": "Independent founder-review package follows integrated acceptance."
+    }
+  }
+}

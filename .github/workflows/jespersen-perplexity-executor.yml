@@ -143,7 +143,7 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Record no-change result
+      - name: Terminalize no-change result
         if: "${{ steps.changed.outputs.changed == 'false' }}"
         env:
           GH_TOKEN: "${{ github.token }}"
@@ -153,7 +153,17 @@ jobs:
           result="$(cat /tmp/jespersen-agent-result.txt 2>/dev/null || true)"
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "The bounded implementation agent produced no repository change.
 
-          $result"
+          $result
+
+          This attempt is terminalized so the Mission Controller can continue with unrelated eligible work. A governed repair or a new backlog task ID is required before retrying this same scope."
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --reason "not planned"
+          jq -n \
+            --arg issue_number "$ISSUE_NUMBER" \
+            --arg failure_stage "no_change" \
+            '{event_type:"jespersen_executor_failed",client_payload:{issue_number:$issue_number,failure_stage:$failure_stage}}' \
+            | gh api --method POST "/repos/$GITHUB_REPOSITORY/dispatches" --input -
+          echo "No-change agent attempt terminalized." >&2
+          exit 1
 
       - name: Commit and push bounded change
         if: "${{ steps.changed.outputs.changed == 'true' }}"
@@ -281,10 +291,55 @@ jobs:
             '{event_type:"jespersen_executor_complete",client_payload:{issue_number:$issue_number,pr_number:$pr_number}}' \
             | gh api --method POST "/repos/$GITHUB_REPOSITORY/dispatches" --input -
 
-      - name: Leave failed review open
+      - name: Terminalize independently rejected change
         if: "${{ steps.changed.outputs.changed == 'true' && steps.verdict.outputs.pass != 'true' }}"
         env:
           GH_TOKEN: "${{ github.token }}"
           ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
           PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
-        run: gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Independent QA failed for PR #$PR_NUMBER. The PR remains unmerged and requires remediation."
+        run: |
+          set -euo pipefail
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Independent QA failed for PR #$PR_NUMBER. The candidate PR is being closed without merge and this task ID is blocked from automatic reselection. A governed remediation or new backlog task ID is required."
+          gh pr close "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --comment "Closed after independent QA rejection; no merge performed."
+          gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --reason "not planned"
+          jq -n \
+            --arg issue_number "$ISSUE_NUMBER" \
+            --arg pr_number "$PR_NUMBER" \
+            --arg failure_stage "independent_qa" \
+            '{event_type:"jespersen_executor_failed",client_payload:{issue_number:$issue_number,pr_number:$pr_number,failure_stage:$failure_stage}}' \
+            | gh api --method POST "/repos/$GITHUB_REPOSITORY/dispatches" --input -
+          echo "Independent QA rejected the candidate." >&2
+          exit 1
+
+      - name: Recover controller after terminal executor failure
+        if: "${{ failure() && steps.task.outputs.issue_number != '' }}"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
+        run: |
+          set -euo pipefail
+          meta="$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json state,stateReason)"
+          state="$(printf '%s' "$meta" | jq -r '.state')"
+          reason="$(printf '%s' "$meta" | jq -r '.stateReason // ""')"
+
+          if [ "$state" = "OPEN" ]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "The executor stopped before an independently accepted merge. This attempt is being marked terminal so unrelated eligible backlog work can continue. Review the failed Actions run for the exact stage; retry requires a governed repair or a new task ID."
+            while read -r pr; do
+              [ -n "$pr" ] || continue
+              gh pr close "$pr" --repo "$GITHUB_REPOSITORY" --comment "Closed because the executor attempt ended before independent acceptance."
+            done < <(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,title --jq '.[] | select(.title == "Agent: issue #'"$ISSUE_NUMBER"'") | .number')
+            gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --reason "not planned"
+            jq -n \
+              --arg issue_number "$ISSUE_NUMBER" \
+              --arg failure_stage "workflow_failure" \
+              '{event_type:"jespersen_executor_failed",client_payload:{issue_number:$issue_number,failure_stage:$failure_stage}}' \
+              | gh api --method POST "/repos/$GITHUB_REPOSITORY/dispatches" --input -
+          elif [ "$state" = "CLOSED" ] && [ "$reason" = "COMPLETED" ]; then
+            jq -n \
+              --arg issue_number "$ISSUE_NUMBER" \
+              --arg recovery "post_merge_signal_recovery" \
+              '{event_type:"jespersen_executor_complete",client_payload:{issue_number:$issue_number,recovery:$recovery}}' \
+              | gh api --method POST "/repos/$GITHUB_REPOSITORY/dispatches" --input -
+          else
+            echo "Issue #$ISSUE_NUMBER already terminalized with state=$state reason=$reason; no duplicate dispatch."
+          fi
