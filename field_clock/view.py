@@ -1,16 +1,14 @@
-"""TIME-004 repository-only field clock development preview. No identity or provider adapter.
+"""TIME-005 repository-only field clock development preview. No identity or provider adapter.
 
-The caller supplies already-authorized *current* assignment display labels. Selection
-is positional; no provider IDs or accounting data are rendered. Never use this preview
-for actual work time: browser-local preview events are not authoritative records.
+Caller supplies already-authorized *current* assignment display labels. Use invented
+assignments here; browser-local preview events are not authoritative work time.
 """
-
 from html import escape
 from pathlib import Path
 
 
 def render_field_clock(assignments: tuple[str, ...]) -> str:
-    """Render the shell for the synthetic pending-event interaction in clock.js."""
+    """Render synthetic local preview shell; never serve as a work-time solution."""
     if type(assignments) is not tuple or any(
         type(label) is not str or not label.strip() or label != label.strip()
         for label in assignments
@@ -58,6 +56,11 @@ def render_field_clock(assignments: tuple[str, ...]) -> str:
         '<p class="step">03 / Local event register</p><h2 id="sync-heading">Preview pending status</h2>'
         '<p id="sync-status" class="sync-status" role="status" aria-live="polite">Checking local preview events</p>'
         '<p id="latest-event" class="latest-event" hidden></p>'
+        '<p id="exception" class="exception" role="status" aria-live="polite" hidden></p>'
+        '<div class="review-controls"><label for="review-note">Review note (synthetic preview only)</label>'
+        '<textarea id="review-note" maxlength="500" rows="2"></textarea>'
+        '<button id="review" class="retry" type="button" disabled>Request forgotten clock-out review</button>'
+        '<button id="correction" class="retry" type="button" disabled>Request time correction review</button></div>'
         '<label class="connection"><input id="connection" type="checkbox"> Simulate connection available</label>'
         '<button id="retry" class="retry" type="button" disabled>Retry preview replay</button>'
         '</section><footer><p>Field time / job site · synthetic preview only</p></footer></main></body></html>'
