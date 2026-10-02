@@ -2,6 +2,8 @@ name: Jespersen Mission Controller
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
   repository_dispatch:
     types: [jespersen_executor_complete, jespersen_executor_failed]
 
@@ -17,7 +19,7 @@ concurrency:
 
 jobs:
   select-next:
-    if: "${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'repository_dispatch' && (github.event.action == 'jespersen_executor_complete' || github.event.action == 'jespersen_executor_failed')) }}"
+    if: "${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'repository_dispatch' && (github.event.action == 'jespersen_executor_complete' || github.event.action == 'jespersen_executor_failed')) }}"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout trusted main
