@@ -1,4 +1,4 @@
-"""Synthetic-only TIME-004 field clock structure and interaction checks."""
+"""Synthetic-only TIME-004/TIME-005 field clock structure and interaction checks."""
 import shutil
 import subprocess
 import unittest
@@ -81,6 +81,18 @@ class FieldClockViewTests(unittest.TestCase):
                          'font-variant-numeric: tabular-nums', '[hidden]', '.sync-pending',
                          '.sync-error'):
             self.assertIn(expected, css)
+
+    def test_review_exception_and_touch_controls(self):
+        tree = ClockMarkup()
+        tree.feed(render_field_clock(('Synthetic Bridge Repaint',)))
+        self.assertEqual(tree.find('p', 'exception')['role'], 'status')
+        self.assertIn('hidden', tree.find('p', 'exception'))
+        self.assertEqual(tree.find('textarea', 'review-note')['maxlength'], '500')
+        for button in ('review', 'correction'):
+            self.assertIn('disabled', tree.find('button', button))
+        self.assertIn('Request forgotten clock-out review', tree.text)
+        self.assertIn('Request time correction review', tree.text)
+        self.assertIn('min-height: 52px', stylesheet())
 
     @unittest.skipUnless(shutil.which('node'), 'Node unavailable; browser interaction checks require Node')
     def test_synthetic_interaction_transitions(self):
