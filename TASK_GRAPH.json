@@ -16,6 +16,12 @@
         "CONTROL-001"
       ]
     },
+    "CONTROL-003": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-001"
+      ]
+    },
     "TIME-001": {
       "repositoryEligible": false,
       "dependencies": [
