@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Field time / Jespersen — synthetic preview</title>
+  <link rel="stylesheet" href="./clock.css">
+</head>
+<body>
+  <div class="preview-notice">Synthetic preview · No time record is saved</div>
+  <div class="clock-shell" id="clock"></div>
+  <script type="module">
+    import { mountClock } from './clock.mjs';
+    // SYNTHETIC preview only. This in-memory capture is NOT a production time record.
+    // Replace callbacks only in an authorized authenticated runtime integration.
+    const examples = Object.freeze([
+      { id: 'synthetic-yard', label: 'North Yard • Exterior coating' },
+      { id: 'synthetic-shop', label: 'Workshop Bay • Interior finish' },
+    ]);
+    const params = new URLSearchParams(location.search);
+    const assignments = params.get('example') === 'multiple' ? examples : [examples[0]];
+    mountClock(document.getElementById('clock'), {
+      assignments,
+      onClockIn: async () => new Date(),
+      onClockOut: async () => {},
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+/* UI-STD-1.0: Jespersen Industrial Operations / Digital Blueprint.
+   Compact field layout, structural rules, semantic state and no decorative motion. */
+:root {
+  color-scheme: light;
+  --primary: #182f29;
+  --secondary: #355248;
+  --accent: #b56624;
+  --background: #eae9e2;
+  --elevated: #fcfbf6;
+  --text: #162821;
+  --muted: #43544d;
+  --border: #86968b;
+  --success: #23644a;
+  --warning: #925014;
+  --critical: #9b3528;
+  --info: #355f65;
+  font-family: Inter, "IBM Plex Sans", system-ui, sans-serif;
+  background: var(--background);
+  color: var(--text);
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+button { font: inherit; }
+.clock-shell { min-height: 100dvh; padding: max(20px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+.clock-header, .clock-main { max-width: 600px; margin-inline: auto; }
+.brand { font-size: .85rem; font-weight: 800; letter-spacing: .1em; color: var(--primary); }
+.brand span { font-weight: 500; color: var(--muted); }
+.header-rule { height: 3px; margin: 16px 0 25px; background: var(--primary); border-left: 60px solid var(--accent); }
+.eyebrow { font-size: .75rem; font-weight: 750; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+h1 { margin: 0 0 24px; font-size: clamp(1.7rem, 7vw, 2.25rem); line-height: 1.1; }
+h2 { font-size: clamp(1.45rem, 6vw, 2rem); line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+.state-line { display: flex; gap: 10px; align-items: center; padding: 12px 0; border-block: 1px solid var(--border); font-size: .95rem; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+.state-mark { width: 12px; height: 12px; border: 2px solid var(--muted); transform: rotate(45deg); flex: none; }
+.is-running .state-mark { background: var(--success); border-color: var(--success); }
+.work-face { padding: 26px 0 20px; min-height: 168px; }
+.work-face p:not(.eyebrow) { color: var(--muted); }
+.job-choices { border: 0; margin: 0; padding: 0; min-width: 0; }
+.job-choices legend { font-size: 1.2rem; font-weight: 750; padding: 0 0 16px; }
+.job-choice { width: 100%; min-height: 60px; display: grid; grid-template-columns: 32px 1fr 24px; align-items: center; gap: 10px; padding: 12px; text-align: left; border: 1px solid var(--border); border-bottom: 0; background: var(--elevated); color: var(--text); cursor: pointer; overflow-wrap: anywhere; }
+.job-choice:last-of-type { border-bottom: 1px solid var(--border); }
+.job-choice.is-selected { border-left: 5px solid var(--accent); padding-left: 8px; background: #f1ece1; font-weight: 750; }
+.choice-number, .elapsed { font-variant-numeric: tabular-nums; font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.choice-number { font-size: .8rem; color: var(--muted); }
+.choice-check { color: var(--primary); }
+.time-block { border-top: 1px solid var(--border); margin-top: 28px; padding-top: 18px; }
+.elapsed { display: block; font-size: clamp(2.5rem, 12vw, 4.5rem); font-weight: 700; line-height: 1.15; letter-spacing: -.04em; color: var(--primary); }
+.time-block p { margin: 10px 0 0; }
+.action { width: 100%; min-height: 64px; padding: 15px 20px; border: 2px solid var(--primary); background: var(--primary); color: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; }
+.action-out { background: var(--elevated); color: var(--primary); }
+.action:hover:not(:disabled), .job-choice:hover:not(:disabled) { border-color: var(--accent); }
+.action:disabled { opacity: .58; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.feedback { border-left: 4px solid var(--critical); padding: 12px; color: var(--critical); background: var(--elevated); font-weight: 700; }
+.surface-note { margin: 28px 0; padding-top: 10px; border-top: 1px solid var(--border); color: var(--muted); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+@media (min-width: 700px) { .clock-shell { padding-top: 48px; } .work-face { min-height: 200px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
