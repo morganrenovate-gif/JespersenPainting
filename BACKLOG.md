@@ -43,6 +43,31 @@ Acceptance:
 - cannot autonomously promote production;
 - sensitive-data pre-commit checks enforced.
 
+### CONTROL-003 — Hedy private runtime bridge package
+Priority: P0
+Status: TODO
+
+Goal:
+Build the public-safe, synthetic-only source package for Jespersen's bounded Hedy staging private-runtime worker so the existing autonomous Mission Controller can hand private DATA work to a separately authorized Hedy lane without exposing client data or credentials to GitHub.
+
+Acceptance:
+- defines a versioned private-runtime worker contract and deterministic state machine for bounded, resumable workbook intake;
+- enforces fixed client context and staging-only execution through runtime-provided configuration, never repository secrets;
+- defines a read-only provider adapter boundary that permits list/read operations only and rejects write-like operations;
+- enforces a configured root-folder boundary and rejects out-of-bound synthetic file references;
+- preserves opaque source identity, immutable hash/fingerprint fields, parser/adapter/recompute evidence, and item-level failure isolation;
+- produces no accounting/provider writes and no production behavior;
+- includes deterministic synthetic tests for resume/idempotency, folder-boundary rejection, unknown-shape fail-closed behavior, and private/public data separation;
+- does not claim live Hedy, Google Drive, Nango, or real-workbook acceptance.
+
+Constraints:
+- T1 repository-only implementation using synthetic fixtures and public contracts only;
+- do not access or include real Jespersen workbooks, employee/customer/job identities, QuickBooks/Gmail rows, Hedy private payloads, credentials, tokens, OAuth material, or the real Drive folder identifier;
+- do not modify .github workflows, TASK_GRAPH.json, BACKLOG.md, STATUS.md, DATA_BOUNDARY.md, AGENTS.md, safety gates, validators, agent contracts, auth/permissions, provider configuration, Hedy runtime state, or production;
+- keep provider transport behind an injected interface so credentials and OAuth remain entirely outside the public repository executor;
+- rollback is removal/revert of this isolated repository package and tests only.
+
+
 ## TIME / QUICKBOOKS
 
 ### TIME-001 — Fresh QuickBooks provider reads
