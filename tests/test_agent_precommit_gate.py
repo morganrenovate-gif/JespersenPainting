@@ -58,6 +58,19 @@ class PublicRepositoryGateTests(unittest.TestCase):
         self.assertIn("non-synthetic email address detected in sample.txt", result.stderr)
         self.assertIn("domain=not-example.invalid", result.stderr)
 
+    def test_labeled_high_confidence_pii_is_blocked_without_echoing_value(self):
+        cases = (
+            ("labeled date of birth", "DOB" + ": " + "01/02/" + "1990"),
+            ("labeled bank routing number", "routing number" + ": " + "123456789"),
+            ("labeled bank account number", "account number" + ": " + "123456789012"),
+        )
+        for label, marker in cases:
+            with self.subTest(label=label):
+                result = self.check_gate("sample.txt", "Synthetic test field: " + marker + "\n")
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(label + " detected in sample.txt", result.stderr)
+                self.assertNotIn(marker, result.stderr)
+
     def test_private_data_prone_file_types_are_blocked(self):
         for suffix in (".xlsx", ".eml", ".csv", ".pdf"):
             with self.subTest(suffix=suffix):
