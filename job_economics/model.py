@@ -1,4 +1,4 @@
-"""ECON-001: versioned, source-separated job evidence; in-memory only.
+"""ECON-001/002: source-separated job evidence and explicit findings; in-memory only.
 
 No cross-source join, deduplication, aggregation or source-of-truth promotion.
 A record's identity is (category, source_id, record_id), never its label/value.
@@ -131,3 +131,96 @@ class JobEconomics:
             source = getattr(self, category)
             if type(source) is not SourceEvidence or source.category != category:
                 raise ValueError(f"{category} must have its own source slot")
+
+
+@dataclass(frozen=True, slots=True, order=True)
+class FactRef:
+    """Full source identity of a fact; local fact IDs alone are not join keys."""
+
+    category: str
+    source_id: str
+    record_id: str
+    fact_id: str
+
+    def __post_init__(self) -> None:
+        if self.category not in CATEGORIES:
+            raise ValueError("invalid fact reference category")
+        for name in ("source_id", "record_id", "fact_id"):
+            _nonempty(getattr(self, name), name)
+
+
+@dataclass(frozen=True, slots=True)
+class ComparisonLink:
+    """Caller assertion that exactly two source facts share a comparable field."""
+
+    left: FactRef
+    right: FactRef
+    comparable_field: str
+
+    def __post_init__(self) -> None:
+        if type(self.left) is not FactRef or type(self.right) is not FactRef:
+            raise ValueError("comparison requires fact references")
+        _nonempty(self.comparable_field, "comparable_field")
+        if ((self.left.category, self.left.source_id) ==
+                (self.right.category, self.right.source_id)):
+            raise ValueError("comparison requires distinct sources")
+
+
+@dataclass(frozen=True, slots=True)
+class ConflictFinding:
+    """Trace only: values and accounting authority stay with the source facts."""
+
+    link: ComparisonLink
+
+
+@dataclass(frozen=True, slots=True)
+class CoverageFinding:
+    """Non-available category; retained facts are referenced, not made fresh."""
+
+    category: str
+    state: str
+    retained_facts: tuple[FactRef, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class EconomicsFindings:
+    conflicts: tuple[ConflictFinding, ...]
+    coverage: tuple[CoverageFinding, ...]
+
+
+def find_evidence(job: JobEconomics, links: tuple[ComparisonLink, ...] = ()) -> EconomicsFindings:
+    """Compare only explicitly linked, present facts of the same literal field/type.
+
+    Missing/stale/review/error coverage remains visible even with no comparisons.
+    A dangling link is a caller error, not permission to guess a source match.
+    """
+    if type(job) is not JobEconomics or type(links) is not tuple or any(
+            type(link) is not ComparisonLink for link in links):
+        raise ValueError("expected a job and a tuple of comparison links")
+
+    facts: dict[FactRef, EvidenceFact] = {}
+    coverage = []
+    for category in CATEGORIES:
+        source = getattr(job, category)
+        retained = []
+        for record in source.records:
+            for fact in record.facts:
+                ref = FactRef(category, record.source_id, record.record_id, fact.id)
+                facts[ref] = fact
+                retained.append(ref)
+        if source.state != "available":
+            coverage.append(CoverageFinding(category, source.state, tuple(sorted(retained))))
+
+    # Canonicalize link direction and order; repeated/reversed links do not
+    # create duplicate conflicts. Nothing is deduplicated in the source slots.
+    pairs = {(min(link.left, link.right), max(link.left, link.right), link.comparable_field)
+             for link in links}
+    conflicts = []
+    for left, right, field in sorted(pairs):
+        if left not in facts or right not in facts:
+            raise ValueError("comparison references a missing source fact")
+        a, b = facts[left], facts[right]
+        if (a.state == b.state == "present" and a.field == b.field == field
+                and type(a.value) is type(b.value) and a.value != b.value):
+            conflicts.append(ConflictFinding(ComparisonLink(left, right, field)))
+    return EconomicsFindings(tuple(conflicts), tuple(coverage))
