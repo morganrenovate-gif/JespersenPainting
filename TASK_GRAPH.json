@@ -212,6 +212,13 @@
         "PRIVATE-DATA-006"
       ],
       "reason": "Synthetic source-only XLSX-to-JSON decoder; installation/real-profile/provider approval remain private."
+    },
+    "PRIVATE-DATA-008": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "PRIVATE-DATA-007"
+      ],
+      "reason": "Synthetic source-only Nango-compatible adapter and reproducible compile preflight; installation, credentials, provider calls and real-profile validation remain private."
     }
   }
 }
