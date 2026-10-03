@@ -25,6 +25,11 @@ SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "dist", "build", "__pycach
 
 PROTECTED_EXACT = {
     "AGENTS.md",
+    "scripts/build_task_ledger.py",
+    "TASK_GRAPH.json",
+    "BACKLOG.md",
+    "STATUS.md",
+    "AUTONOMY_EXECUTOR.md",
     "DATA_BOUNDARY.md",
     "UI_STANDARD.md",
     ".codex/config.toml",
@@ -32,6 +37,8 @@ PROTECTED_EXACT = {
     "scripts/agent_precommit_gate.py",
     "scripts/run_repo_checks.py",
     "scripts/validate_agent_task.py",
+    "scripts/parse_review_verdict.py",
+    "scripts/recover_agent_task.py",
     "scripts/validate_controller_plan.py",
 }
 PROTECTED_PREFIXES = (".github/",)
@@ -463,3 +470,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
