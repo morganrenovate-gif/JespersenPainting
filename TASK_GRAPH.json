@@ -197,6 +197,14 @@
         "QA-004"
       ],
       "reason": "Independent founder-review package follows integrated acceptance."
+    },
+    "PRIVATE-DATA-006": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "CONTROL-003",
+        "DATA-006"
+      ],
+      "reason": "Source-only private runner; live private deployment acceptance remains separate."
     }
   }
 }

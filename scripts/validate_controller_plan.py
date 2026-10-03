@@ -29,7 +29,7 @@ if plan.get("action") not in {"dispatch", "stop"}:
 
 if plan.get("action") == "dispatch":
     task_id = str(plan.get("task_id", "")).strip()
-    if not re.fullmatch(r"[A-Z]+-\d{3}", task_id):
+    if not re.fullmatch(r"[A-Z]+(?:-[A-Z]+)*-\d{3}", task_id):
         errs.append("invalid task_id")
     if f"### {task_id} " not in backlog:
         errs.append("task_id not present in BACKLOG.md")
@@ -101,3 +101,4 @@ if errs:
     fail(errs)
 
 print("MISSION CONTROLLER PLAN: PASS")
+

@@ -9,9 +9,9 @@ import re
 import sys
 from collections import defaultdict
 
-TASK_HEADING_RE = re.compile(r"^###\s+([A-Z]+-\d{3})\b", re.M)
+TASK_HEADING_RE = re.compile(r"^###\s+([A-Z]+(?:-[A-Z]+)*-\d{3})\b", re.M)
 STATUS_RE = re.compile(r"^Status:\s*([A-Z_]+)\s*$", re.M)
-ISSUE_TITLE_RE = re.compile(r"^\[AGENT\]\s+([A-Z]+-\d{3})\s*$")
+ISSUE_TITLE_RE = re.compile(r"^\[AGENT\]\s+([A-Z]+(?:-[A-Z]+)*-\d{3})(?:\s+—[^\n]+)?\s*$")
 PR_TITLE_RE = re.compile(r"^Agent:\s+issue\s+#(\d+)\s*$", re.I)
 
 READY_STATES_DEFAULT = {"PASS", "QA"}
@@ -169,3 +169,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

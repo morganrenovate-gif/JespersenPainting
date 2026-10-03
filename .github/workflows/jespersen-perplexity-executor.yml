@@ -16,10 +16,16 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  actions: write
+
+concurrency:
+  group: jespersen-executor
+  cancel-in-progress: false
 
 jobs:
   implement_and_review:
     if: "${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[AGENT]') }}"
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
     steps:
@@ -43,6 +49,7 @@ jobs:
           gh issue view "$issue" --repo "$GITHUB_REPOSITORY" --json number,title,body,author,url > /tmp/jespersen-agent-task.json
 
       - name: Verify trusted trigger actor
+        id: actor
         env:
           GH_TOKEN: "${{ github.token }}"
           ACTOR: "${{ github.actor }}"
@@ -59,7 +66,11 @@ jobs:
           esac
 
       - name: Validate public-safe task envelope
+        id: envelope
         run: python scripts/validate_agent_task.py /tmp/jespersen-agent-task.json
+
+      - name: Install trusted test dependency
+        run: python -m pip install pytest==8.4.2
 
       - name: Require Perplexity credential
         env:
@@ -206,14 +217,19 @@ jobs:
           PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
         run: |
           python - <<'PY'
+          import json
           import os
           import pathlib
 
+          task = json.loads(pathlib.Path("/tmp/jespersen-agent-task.json").read_text())
           prompt = f"""You are the independent QA/Security reviewer for Jespersen Painting Intelligence.
 
           Review pull request #{os.environ['PR_NUMBER']} implementing issue #{os.environ['ISSUE_NUMBER']}.
 
-          Read AGENTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, the task in BACKLOG.md, and use git_diff with base=origin/main to inspect the complete candidate diff.
+          Exact task package:
+          {task.get("body") or ""}
+
+          Read AGENTS.md, DATA_BOUNDARY.md, UI_STANDARD.md, ACCEPTANCE.md, CONSTRAINTS.md, RUNBOOK.md, BACKLOG.md, and use git_diff with base=origin/main to inspect the complete candidate diff.
 
           You are not the implementer. Do not modify files.
 
@@ -252,15 +268,10 @@ jobs:
         if: "${{ steps.changed.outputs.changed == 'true' }}"
         run: |
           set -euo pipefail
-          first="$(head -n 1 /tmp/jespersen-agent-review.txt | tr -d '\r')"
-          case "$first" in
-            "VERDICT: PASS") echo "pass=true" >> "$GITHUB_OUTPUT" ;;
-            "VERDICT: FAIL") echo "pass=false" >> "$GITHUB_OUTPUT" ;;
-            *) echo "Invalid independent verdict: $first" >&2; exit 1 ;;
-          esac
+          python scripts/parse_review_verdict.py /tmp/jespersen-agent-review.txt >> "$GITHUB_OUTPUT"
 
       - name: Comment independent review
-        if: "${{ steps.changed.outputs.changed == 'true' }}"
+        if: "${{ always() && steps.pr.outputs.pr_number != '' }}"
         env:
           GH_TOKEN: "${{ github.token }}"
           PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
@@ -343,3 +354,11 @@ jobs:
           else
             echo "Issue #$ISSUE_NUMBER already terminalized with state=$state reason=$reason; no duplicate dispatch."
           fi
+
+
+      - name: Dispatch bounded remediation
+        if: "${{ failure() && steps.actor.outcome == 'success' && steps.envelope.outcome == 'success' }}"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+          ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
+        run: python scripts/recover_agent_task.py

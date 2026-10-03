@@ -7,6 +7,7 @@ not present in this process. This script is protected from autonomous edits.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import pathlib
 import shutil
@@ -42,14 +43,15 @@ def main() -> int:
             if name in scripts:
                 ok = run(["npm", "run", name]) and ok
 
-    if (ROOT / "pytest.ini").exists() or (ROOT / "pyproject.toml").exists():
-        if shutil.which("python"):
-            try:
-                import pytest  # noqa: F401
-            except Exception:
-                print("SKIP: pytest not installed")
-            else:
-                ok = run(["python", "-m", "pytest"]) and ok
+    if (ROOT / "tests").exists():
+        if importlib.util.find_spec("pytest") is None:
+            print("FAIL: required pytest is not installed", file=sys.stderr)
+            ok = False
+        elif shutil.which("node") is None:
+            print("FAIL: required Node runtime is not installed", file=sys.stderr)
+            ok = False
+        else:
+            ok = run([sys.executable, "-m", "pytest", "-q"]) and ok
 
     print("TRUSTED REPOSITORY CHECKS:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
@@ -57,3 +59,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
