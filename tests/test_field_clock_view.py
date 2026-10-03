@@ -63,7 +63,7 @@ class FieldClockViewTests(unittest.TestCase):
         self.assertEqual(tree.find('p', 'sync-status')['role'], 'status')
         self.assertEqual(tree.find('p', 'sync-status')['aria-live'], 'polite')
         self.assertEqual(tree.find('p', 'elapsed')['role'], 'timer')
-        self.assertEqual(tree.find('time', 'started'), {})
+        self.assertEqual(tree.find('time', 'started'), {'id': 'started'})
         self.assertEqual(tree.find('div', 'running')['hidden'], None)
         self.assertEqual(tree.find('button', 'retry')['disabled'], None)
         self.assertEqual(tree.find('input', 'connection')['type'], 'checkbox')
@@ -102,3 +102,4 @@ class FieldClockViewTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
