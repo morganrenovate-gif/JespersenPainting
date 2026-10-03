@@ -309,3 +309,14 @@ Priority: P1
 Status: TODO
 
 No autonomous production promotion.
+
+
+## PRIVATE RUNTIME SOURCE
+
+### PRIVATE-DATA-006 — Financial extraction runner source
+Priority: P0
+Status: TODO
+
+Goal: Existing Job Cost Intelligence source runner with a three-file pilot, independent financial reconciliation QA, and bounded resumable corpus continuation. Original attempt #44 stopped before acceptance; bounded remediation is owned by the trusted executor. Public synthetic source only. Real corpus execution and private runtime installation require separate evidence.
+
+Acceptance: executable synthetic tests, decimal calculations, provenance, source immutability, idempotency, tenant/staging isolation, unknown-data review states, pilot gate, cancellation and bounded failure recovery. Production and provider writes remain excluded.
