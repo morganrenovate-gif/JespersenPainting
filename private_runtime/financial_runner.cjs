@@ -1,11 +1,13 @@
 /* PRIVATE-DATA-006 v1. No XLSX binary reader or provider access in public source. */
 'use strict';
-const VERSION = 'financial-runner/v1';
+const VERSION = 'financial-runner/v2';
 const categories = { labor: ['hours', 'hourly_cost'], material: ['quantity', 'unit_cost'], revenue: ['entry_type', 'amount'] };
 const names = ['labor', 'materials', 'revenue', 'profit', 'margin', 'payments', 'outstanding'];
 const stages = ['inventoried', 'fingerprinted', 'extracted', 'reconciled', 'needs_review', 'failed', 'accepted'];
 const clone = x => JSON.parse(JSON.stringify(x));
-const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const canonical = value => Array.isArray(value) ? value.map(canonical) :
+  value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])])) : value;
+const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 function halt(code) { const error = new Error(code); error.code = code; throw error; }
 const hash = x => typeof x === 'string' && /^[a-f0-9]{64}$/.test(x);
 const text = x => typeof x === 'string' && x.length > 0;
@@ -15,7 +17,12 @@ function decimal(x) {
   const value = BigInt(whole) * 10000n + BigInt(fraction.padEnd(4, '0'));
   return negative ? -value : value;
 }
-function rounded(n, unit) { const abs = n < 0n ? -n : n; return (n < 0n ? -1n : 1n) * ((abs + unit / 2n) / unit); }
+function rounded(n, unit) {
+  if (unit === 0n) halt('invalid_divisor');
+  const abs = n < 0n ? -n : n, divisor = unit < 0n ? -unit : unit;
+  const sign = (n < 0n) !== (unit < 0n) ? -1n : 1n;
+  return sign * ((abs + divisor / 2n) / divisor);
+}
 function money(x) { const n = decimal(x); if (n % 100n) halt('money_precision'); return n / 100n; }
 function format(n, unit) {
   const abs = n < 0n ? -n : n;
@@ -36,7 +43,7 @@ function source(cell, kind, seen) {
 }
 function extract(snapshot, profile) {
   // Exact runtime-approved profile only. Synthetic fixtures are NOT live coverage.
-  if (!profile || !text(profile.version) || !hash(profile.signature) ||
+  if (!profile || !Array.isArray(profile.labels) || !text(profile.version) || !hash(profile.signature) ||
       !same(Object.keys(profile.sections || {}).sort(), Object.keys(categories).sort()) ||
       !same(Object.keys(profile.totals || {}).sort(), names.slice().sort()) ||
       Object.entries(categories).some(([k, v]) => !same(profile.sections[k], v)) ||
@@ -45,6 +52,12 @@ function extract(snapshot, profile) {
       !same(Object.keys(snapshot.sections || {}).sort(), Object.keys(categories).sort()) ||
       !same(Object.keys(snapshot.totals || {}).sort(), names.slice().sort())) halt('unknown_shape');
   const used = new Set(), rows = {};
+  // Labels/metadata are exact approved literals, never arbitrary dropped cells.
+  if (!Array.isArray(snapshot.labels) || !same(snapshot.labels, profile.labels)) halt('unknown_shape');
+  const labels = snapshot.labels.map(cell => {
+    if (cell.formula !== null || cell.result !== null) halt('invalid_profile');
+    return source(cell, 'text', used);
+  });
   for (const [category, fields] of Object.entries(categories)) {
     const part = snapshot.sections[category];
     if (!part || part.complete !== true || !same(part.headers, fields) || !Array.isArray(part.rows)) halt('unknown_shape');
@@ -61,7 +74,7 @@ function extract(snapshot, profile) {
     source(snapshot.totals[name], name === 'margin' ? 'decimal' : 'money', used);
   // Complete nonempty-cell inventory is essential: no unrecognized rows can be silently dropped.
   if (!Array.isArray(snapshot.nonempty) || !same(snapshot.nonempty.slice().sort(), [...used].sort())) halt('unknown_shape');
-  return { profileVersion: profile.version, rows, totals };
+  return { profileVersion: profile.version, labels, rows, totals };
 }
 function calculate(e) {
   const sum = (rows, a, b) => rows.length ? rows.reduce((n, row) =>
@@ -94,6 +107,11 @@ function scopeCheck(scope) {
   if (!scope || scope.client !== 'jespersen-painting' || scope.environment !== 'staging' ||
       scope.authorized !== true || scope.killSwitch !== false || !text(scope.root)) halt('scope_halt');
 }
+function canonicalFiles(files) {
+  return files.map(f => ({ id: f.id, sourceId: f.sourceId, sha256: f.sha256,
+    parent: f.parent, client: f.client, environment: f.environment }))
+    .sort((a, b) => a.sourceId < b.sourceId ? -1 : a.sourceId > b.sourceId ? 1 : 0);
+}
 function inventoryCheck(files, scope) {
   if (!Array.isArray(files) || files.length < 3) halt('manifest_halt');
   const ids = new Set(), locators = new Set();
@@ -111,13 +129,22 @@ function progress(state) {
 }
 // store.get(key) -> {revision,value}|null; store.cas(key, revision|null, value) -> boolean.
 // CAS must be durable/atomic and reject stale revision across concurrent invocations.
-function createRunner({ store, transport, qa, output, profiles, scope, key }) {
+// accept(key, revision, next, outputKey, record, lease) atomically checks revision,
+// lease owner and non-cancelled scope, then inserts immutable output and updates
+// checkpoint together. Check expiry immediately before initiating the commit.
+// Expiry permits takeover; only an intervening revision advance revokes an in-flight
+// commit. No separate output write, and no server-side time condition is assumed.
+function createRunner({ store, transport, qa, profiles, scope, key,
+  clock = () => Date.now(), leaseMs = 60000, token = () => `${Date.now()}:${Math.random()}` }) {
   scopeCheck(scope);
-  if (!text(key) || !store || !transport || !qa || !output || !Array.isArray(profiles)) halt('configuration_halt');
+  if (!text(key) || !store || typeof store.accept !== 'function' || !transport || !qa ||
+      !Array.isArray(profiles) || typeof clock !== 'function' || typeof token !== 'function' ||
+      !Number.isSafeInteger(leaseMs) || leaseMs < 1) halt('configuration_halt');
   async function tick() {
     scopeCheck(scope);
-    const files = await transport.inventory(scope.root);
-    inventoryCheck(files, scope);
+    const manifest = await transport.inventory(scope.root);
+    inventoryCheck(manifest, scope);
+    const files = canonicalFiles(manifest);
     let saved = await store.get(key);
     if (!saved) {
       const initial = { version: VERSION, client: scope.client, environment: scope.environment,
@@ -125,6 +152,9 @@ function createRunner({ store, transport, qa, output, profiles, scope, key }) {
           ({ ref: clone(ref), state: 'inventoried', pilot: n < 3, attempts: 0 })) };
       await store.cas(key, null, initial);
       saved = await store.get(key);
+      // Sharded stores may stage a bounded bootstrap batch without publishing a
+      // head yet. This is healthy initialization, not a failed analysis attempt.
+      if (!saved) return progress({ ...initial, phase: 'initializing' });
     }
     if (!saved) halt('checkpoint_halt');
     const original = saved.value;
@@ -132,23 +162,35 @@ function createRunner({ store, transport, qa, output, profiles, scope, key }) {
         original.environment !== scope.environment || original.root !== scope.root ||
         !same(original.items.map(i => i.ref), files)) halt('source_changed_halt');
     if (original.phase === 'cancelled') halt('scope_halt');
+    if (original.phase === 'completed') return progress(original);
+    const now = clock();
+    if (!Number.isSafeInteger(now)) halt('configuration_halt');
+    // An active claim is not a retry. Only expired work may be reclaimed.
+    if (original.lease && original.lease.expiresAt > now) return progress(original);
     const index = original.items.findIndex(i => (original.phase === 'pilot' ? i.pilot : !i.pilot) &&
       !['accepted', 'needs_review', 'failed'].includes(i.state));
     if (index < 0) {
       if (original.phase === 'pilot' && original.items.filter(i => i.pilot).every(i => i.state === 'accepted')) {
         const next = clone(original); next.phase = 'corpus';
+        delete next.lease;
+        if (await store.cas(key, saved.revision, next)) return progress(next);
+      } else if (original.phase === 'corpus') {
+        const next = clone(original); next.phase = 'completed'; delete next.lease;
         if (await store.cas(key, saved.revision, next)) return progress(next);
       }
       return progress(original);
     }
     const claimed = clone(original), item = claimed.items[index];
     if (item.attempts >= 3) {
-      item.state = 'failed'; item.reason = 'retry_exhausted';
+      item.state = 'failed'; item.reason = 'retry_exhausted'; delete claimed.lease;
       if (await store.cas(key, saved.revision, claimed)) return progress(claimed);
       return progress(original);
     }
     // Durable claim before side effects. Crash replay is bounded by attempts.
     item.attempts++;
+    const owner = token();
+    if (!text(owner)) halt('configuration_halt');
+    claimed.lease = { owner, expiresAt: now + leaseMs };
     if (!await store.cas(key, saved.revision, claimed)) return progress(original);
     const claim = await store.get(key);
     if (!claim || !same(claim.value, claimed)) halt('checkpoint_halt');
@@ -177,12 +219,20 @@ function createRunner({ store, transport, qa, output, profiles, scope, key }) {
             receipt.signature !== target.signature || receipt.version !== VERSION ||
             receipt.evidence !== JSON.stringify(payload)) halt('qa_rejected');
         scopeCheck(scope);
-        // Immutable additive insert. Recheck claimed revision after async QA/cancellation.
         const current = await store.get(key);
-        if (!current || !same(current.value, claimed)) halt('claim_lost');
-        await output.putIfAbsent(`${VERSION}:${ref.sourceId}:${ref.sha256}`,
-          { ref: clone(ref), signature: target.signature, ...clone(payload), receipt: clone(receipt), version: VERSION });
-        delete target.evidence; delete target.financial; target.state = 'accepted';
+        if (!current || current.revision !== claim.revision || !same(current.value, claimed) ||
+            clock() >= claimed.lease.expiresAt) return progress(current ? current.value : claimed);
+        const record = { ref: clone(ref), signature: target.signature, ...clone(payload),
+          receipt: clone(receipt), version: VERSION };
+        const committed = clone(next), accepted = committed.items[index];
+        delete accepted.evidence; delete accepted.financial; accepted.state = 'accepted'; accepted.attempts = 0;
+        delete committed.lease;
+        // Runtime MUST commit immutable output and checkpoint in one revision-fenced transaction.
+        if (!await store.accept(key, claim.revision, committed, `${VERSION}:${ref.sourceId}:${ref.sha256}`, record,
+          clone(claimed.lease))) {
+          const latest = await store.get(key); return progress(latest.value);
+        }
+        return progress(committed);
       } else halt('checkpoint_halt');
       target.attempts = 0;
     } catch (error) {
@@ -193,12 +243,16 @@ function createRunner({ store, transport, qa, output, profiles, scope, key }) {
       if (review) { target.state = 'needs_review'; target.reason = error.code; }
       else if (target.attempts >= 3) { target.state = 'failed'; target.reason = 'retry_exhausted'; }
     }
+    scopeCheck(scope);
+    if (clock() >= claimed.lease.expiresAt) return progress((await store.get(key)).value);
+    delete next.lease;
     if (!await store.cas(key, claim.revision, next)) return progress((await store.get(key)).value);
     return progress(next);
   }
   async function cancel() {
     const saved = await store.get(key);
-    if (!saved || saved.value.client !== scope.client || saved.value.environment !== scope.environment) halt('scope_halt');
+    if (!saved || saved.value.version !== VERSION || saved.value.root !== scope.root ||
+        saved.value.client !== scope.client || saved.value.environment !== scope.environment) halt('scope_halt');
     const next = clone(saved.value); next.phase = 'cancelled';
     return store.cas(key, saved.revision, next);
   }

@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   select-next:
+    timeout-minutes: 15
     if: "${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event_name == 'repository_dispatch' && (github.event.action == 'jespersen_executor_complete' || github.event.action == 'jespersen_executor_failed')) }}"
     runs-on: ubuntu-latest
     steps:
@@ -29,34 +30,39 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Recover abandoned executor and interrupted dispatch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/agent_watchdog.py
+
       - name: Stop if an executor task is already open
         id: active
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          count="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search 'in:title [AGENT]' --json number --jq 'length')"
+          count="$(python scripts/agent_watchdog.py --count-active)"
           echo "count=$count" >> "$GITHUB_OUTPUT"
 
       - name: Build runtime task ledger
+        id: ledger
         if: steps.active.outputs.count == '0'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh issue list --repo "$GITHUB_REPOSITORY" --state all --search 'in:title [AGENT]' --limit 200 \
-            --json number,title,state,stateReason,createdAt,closedAt,url > /tmp/agent-issues.json
-          gh pr list --repo "$GITHUB_REPOSITORY" --state merged --limit 200 \
-            --json number,title,state,mergedAt,url > /tmp/agent-prs.json
+          python scripts/agent_watchdog.py --ledger-issues > /tmp/agent-issues.json
+          python scripts/agent_watchdog.py --ledger-prs > /tmp/agent-prs.json
           python scripts/build_task_ledger.py BACKLOG.md TASK_GRAPH.json /tmp/agent-issues.json /tmp/agent-prs.json > /tmp/task-ledger.json
           python - <<'PY'
           import json
           p=json.load(open("/tmp/task-ledger.json"))
           print("Eligible tasks:", ", ".join(p.get("eligibleTaskIds") or []) or "none")
           PY
+          echo "eligible=$(python -c 'import json; print(len(json.load(open("/tmp/task-ledger.json"))["eligibleTaskIds"]))')" >> "$GITHUB_OUTPUT"
 
       - name: Require Perplexity credential
-        if: steps.active.outputs.count == '0'
+        if: steps.active.outputs.count == '0' && steps.ledger.outputs.eligible != '0'
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
         run: |
@@ -64,7 +70,7 @@ jobs:
           [ -n "${PERPLEXITY_API_KEY:-}" ] || { echo "PERPLEXITY_API_KEY GitHub Actions secret is not configured." >&2; exit 1; }
 
       - name: Build controller prompt
-        if: steps.active.outputs.count == '0'
+        if: steps.active.outputs.count == '0' && steps.ledger.outputs.eligible != '0'
         run: |
           cat > /tmp/mission-controller.md <<'PROMPT'
           You are the Jespersen Mission Controller.
@@ -105,7 +111,7 @@ jobs:
           cat /tmp/task-ledger.json >> /tmp/mission-controller.md
 
       - name: Run Mission Controller
-        if: steps.active.outputs.count == '0'
+        if: steps.active.outputs.count == '0' && steps.ledger.outputs.eligible != '0'
         env:
           PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
           MODEL: "${{ vars.PERPLEXITY_CONTROLLER_MODEL || 'openai/gpt-6-luna' }}"
@@ -114,7 +120,7 @@ jobs:
           python scripts/perplexity_repo_agent.py             --mode controller             --prompt-file /tmp/mission-controller.md             --output-file /tmp/controller-plan.json             --model "$MODEL"             --service-tier flex             --max-output-tokens 3000
 
       - name: Validate controller plan
-        if: steps.active.outputs.count == '0'
+        if: steps.active.outputs.count == '0' && steps.ledger.outputs.eligible != '0'
         id: validate
         run: |
           set -euo pipefail
@@ -174,5 +180,5 @@ jobs:
             -f issue_number="$ISSUE_NUMBER"
 
       - name: Record stop
-        if: steps.active.outputs.count == '0' && steps.validate.outputs.action == 'stop'
+        if: steps.active.outputs.count == '0' && (steps.ledger.outputs.eligible == '0' || steps.validate.outputs.action == 'stop')
         run: echo "No eligible public-safe T0/T1 repository task is currently available."

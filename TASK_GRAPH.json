@@ -205,6 +205,13 @@
         "DATA-006"
       ],
       "reason": "Source-only private runner; live private deployment acceptance remains separate."
+    },
+    "PRIVATE-DATA-007": {
+      "repositoryEligible": true,
+      "dependencies": [
+        "PRIVATE-DATA-006"
+      ],
+      "reason": "Synthetic source-only XLSX-to-JSON decoder; installation/real-profile/provider approval remain private."
     }
   }
 }

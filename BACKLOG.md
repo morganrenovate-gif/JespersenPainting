@@ -320,3 +320,15 @@ Status: TODO
 Goal: Existing Job Cost Intelligence source runner with a three-file pilot, independent financial reconciliation QA, and bounded resumable corpus continuation. Original attempt #44 stopped before acceptance; bounded remediation is owned by the trusted executor. Public synthetic source only. Real corpus execution and private runtime installation require separate evidence.
 
 Acceptance: executable synthetic tests, decimal calculations, provenance, source immutability, idempotency, tenant/staging isolation, unknown-data review states, pilot gate, cancellation and bounded failure recovery. Production and provider writes remain excluded.
+
+### PRIVATE-DATA-007 — Read-only XLSX financial JSON transport source
+Priority: P0
+Status: TODO
+
+Goal: Build a bounded Node-compatible XLSX-to-JSON decoder and a dependency-injected provider action adapter using only synthetic workbooks. Hedy cannot buffer binary HTTP responses, so the private runtime needs source-bound JSON cell evidence from a separately installed read-only decoder.
+
+Requested work: Preserve original-byte SHA-256 and MD5, worksheet names/locators, literal values, original formulas and separately read cached results, and complete nonempty-cell inventory. Verify provider metadata before and after reads through injected read-only transport, enforce parent/root and expected hash/version boundaries, and bound ZIP expansion, CRC, XML parsing, response size and retries. Decode shared/inline strings without evaluating formulas; reject unsupported shapes/entities/external relationships instead of guessing. Produce raw cell evidence for independently approved private profiles; never invent actual Jespersen layouts. Include executable synthetic XLSX fixtures and failure tests. A source adapter must not contain actual tenant configuration, source IDs, real workbook data or credentials.
+
+Acceptance: Executable synthetic tests prove immutable originals, deterministic hashes/provenance, cached formula separation, complete cell coverage, safe ZIP/XML limits, changed metadata rejection, read-only provider interface, and unsupported format review dispositions. Public source only: do not install/deploy a provider action, modify credentials/auth/permissions, use real client data, call Hedy/Nango/Drive, or claim any live financial analysis. Exact private runtime installation, source-profile validation and independent three-file QA remain separate tasks. Backend source only; UI_STANDARD.md remains inherited.
+
+Rollback: Revert decoder source and synthetic tests; no external/provider/source state is changed.

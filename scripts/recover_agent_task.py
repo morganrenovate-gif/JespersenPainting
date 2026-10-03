@@ -50,11 +50,18 @@ def main():
         return
     title = f'[AGENT] {task} — recovery {root}.{attempt}'
     # The executor is serialized globally, so lookup/create is single-writer.
-    existing = json.loads(gh('issue', 'list', '--repo', repo, '--state', 'all',
-                             '--limit', '200', '--json', 'number,title,state'))
-    match = next((x for x in existing if x['title'] == title), None)
+    from agent_watchdog import pages, valid_task
+    existing = pages(repo, 'issues?state=all&per_page=100')
+    match = next((x for x in existing if x['title'] == title and valid_task(repo, x)), None)
     if match:
-        # Never dispatch duplicate or already terminal child jobs.
+        # Retry interrupted create/dispatch handoffs, with durable bounded reservations.
+        if match['state'].upper() == 'OPEN':
+            from agent_watchdog import dispatch, pages
+            child = json.loads(gh('issue', 'view', str(match['number']), '--repo', repo,
+                                 '--json', 'number,title,body,state'))
+            dispatch(repo, child,
+                     pages(repo, 'actions/workflows/jespersen-perplexity-executor.yml/runs?per_page=100'),
+                     pages(repo, f'issues/{match["number"]}/comments?per_page=100'))
         return
     child = {'title': title, 'body': recovery_body(issue, root, attempt)}
     review = Path('/tmp/jespersen-agent-review.txt')
@@ -69,6 +76,9 @@ def main():
         body_path.write_text(child['body'])
         url = gh('issue', 'create', '--repo', repo, '--title', title, '--body-file', str(body_path))
     child_number = int(url.rsplit('/', 1)[1])
+    from datetime import datetime, timezone
+    gh('issue', 'comment', str(child_number), '--repo', repo, '--body',
+       f'AUTONOMY_DISPATCH attempt=1 at={datetime.now(timezone.utc).isoformat()}')
     gh('workflow', 'run', 'jespersen-perplexity-executor.yml', '--repo', repo,
        '--ref', 'main', '-f', f'issue_number={child_number}')
     print(f'Autonomous remediation dispatched: issue {child_number}')

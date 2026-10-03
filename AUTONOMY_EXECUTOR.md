@@ -133,3 +133,11 @@ The repository-side loop becomes active when:
 3. Mission Controller is manually dispatched once for the smoke test.
 
 The first complete Mission Controller -> task -> implementation -> safety -> independent QA -> merge -> next-controller cycle has been observed. CONTROL-002 remains IN_PROGRESS only because the separate Hedy non-production execution lane is not yet fully autonomous.
+# Continuous supervision and recovery
+
+The Mission Controller reconciles public-safe tasks on its existing 15-minute schedule before selecting new work. Healthy queued/running executors are preserved. A running executor older than its 30-minute timeout plus 15-minute grace, or a queue wait exceeding 60 minutes, is cancelled and recovered after reaching terminal state. Merged implementations are reconciled without duplicate execution. Malformed or untrusted issues do not block unrelated work.
+
+Dispatch reservations are durable trusted-bot issue comments. Interrupted dispatches retry after 15 minutes, with three dispatch attempts maximum per issue. Substantive remediation retains the original validated scope and has two attempts maximum per root. Exhausted tasks remain visibly blocked while unrelated eligible work continues. Controller scheduling is a supervision mechanism, not a guarantee of continuous provider availability.
+
+The executor explicitly dispatches trusted checks against the immutable candidate SHA and requires that exact run to succeed. Independent task-scoped QA must also pass; merge uses an atomic matching-head condition. Source preparation does not establish private runtime installation or workbook financial acceptance.
+
