@@ -15,3 +15,30 @@ jobs:
           persist-credentials: false
       - run: python -m pip install pytest==8.4.2
       - run: python scripts/run_repo_checks.py
+
+  independent-review:
+    if: github.event_name == 'pull_request'
+    needs: regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare trusted read-only reviewer
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git show origin/main:scripts/perplexity_repo_agent.py > /tmp/trusted-reviewer.py
+          cat > /tmp/control-review.md <<'PROMPT'
+          Independently review the complete control-plane repair diff with git_diff base=origin/main. Read AGENTS.md and DATA_BOUNDARY.md. This is an explicitly authorized trusted control-plane repair, so protected files may be changed by this PR; bounded coding agents must still be unable to change them. Check fail-closed verdict parsing, mandatory executable tests, bounded remediation, scope preservation, duplicate dispatch, credential isolation, and task-ledger compatibility. No edits or external actions. Return exactly one standalone line VERDICT: PASS or VERDICT: FAIL, followed by evidence and substantive defects. PASS only if the repair is acceptable; never treat missing evidence as acceptance.
+          PROMPT
+      - name: Independent read-only QA
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+        run: python /tmp/trusted-reviewer.py --mode review --prompt-file /tmp/control-review.md --output-file /tmp/control-review.txt --model google/gemini-3.7-flash --max-output-tokens 6000
+      - name: Preserve and enforce independent verdict
+        run: |
+          cat /tmp/control-review.txt
+          python scripts/parse_review_verdict.py /tmp/control-review.txt > /tmp/verdict
+          test "$(cat /tmp/verdict)" = "pass=true"
