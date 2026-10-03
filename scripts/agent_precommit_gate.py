@@ -17,6 +17,8 @@ PROTECTED = {
     "scripts/validate_agent_task.py",
     "scripts/parse_review_verdict.py",
     "scripts/recover_agent_task.py",
+    "scripts/agent_watchdog.py",
+    "scripts/wait_candidate_checks.py",
     "scripts/validate_controller_plan.py",
     "scripts/build_task_ledger.py",
     "TASK_GRAPH.json",
@@ -172,4 +174,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

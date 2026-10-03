@@ -1,4 +1,5 @@
 name: Jespersen Perplexity Executor
+run-name: "Jespersen executor issue #${{ inputs.issue_number || github.event.issue.number }}"
 
 "on":
   issues:
@@ -46,7 +47,11 @@ jobs:
           issue="${EVENT_ISSUE:-${INPUT_ISSUE:-}}"
           [[ "$issue" =~ ^[0-9]+$ ]] || { echo "Invalid issue number" >&2; exit 1; }
           echo "issue_number=$issue" >> "$GITHUB_OUTPUT"
-          gh issue view "$issue" --repo "$GITHUB_REPOSITORY" --json number,title,body,author,url > /tmp/jespersen-agent-task.json
+          gh issue view "$issue" --repo "$GITHUB_REPOSITORY" --json number,title,body,author,url,state > /tmp/jespersen-agent-task.json
+          if [ "$(jq -r '.state' /tmp/jespersen-agent-task.json)" != "OPEN" ]; then
+            echo "Terminal task; duplicate queued execution is refused."
+            exit 1
+          fi
 
       - name: Verify trusted trigger actor
         id: actor
@@ -277,6 +282,15 @@ jobs:
           PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
         run: gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/jespersen-agent-review.txt
 
+      - name: Require exact immutable candidate checks
+        if: "${{ steps.changed.outputs.changed == 'true' && steps.verdict.outputs.pass == 'true' }}"
+        env:
+          GH_TOKEN: "${{ github.token }}"
+          PR_NUMBER: "${{ steps.pr.outputs.pr_number }}"
+        run: |
+          export CANDIDATE_SHA="$(git rev-parse HEAD)"
+          python scripts/wait_candidate_checks.py
+
       - name: Merge independently accepted change
         if: "${{ steps.changed.outputs.changed == 'true' && steps.verdict.outputs.pass == 'true' }}"
         env:
@@ -285,7 +299,7 @@ jobs:
           ISSUE_NUMBER: "${{ steps.task.outputs.issue_number }}"
         run: |
           set -euo pipefail
-          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
+          gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch --match-head-commit "$(git rev-parse HEAD)"
           gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --comment "Independent cross-model QA passed and the bounded change was merged to main."
 
       - name: Signal Mission Controller after accepted merge

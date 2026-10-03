@@ -39,6 +39,8 @@ PROTECTED_EXACT = {
     "scripts/validate_agent_task.py",
     "scripts/parse_review_verdict.py",
     "scripts/recover_agent_task.py",
+    "scripts/agent_watchdog.py",
+    "scripts/wait_candidate_checks.py",
     "scripts/validate_controller_plan.py",
 }
 PROTECTED_PREFIXES = (".github/",)
@@ -470,4 +472,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
