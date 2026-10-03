@@ -332,3 +332,29 @@ Requested work: Preserve original-byte SHA-256 and MD5, worksheet names/locators
 Acceptance: Executable synthetic tests prove immutable originals, deterministic hashes/provenance, cached formula separation, complete cell coverage, safe ZIP/XML limits, changed metadata rejection, read-only provider interface, and unsupported format review dispositions. Public source only: do not install/deploy a provider action, modify credentials/auth/permissions, use real client data, call Hedy/Nango/Drive, or claim any live financial analysis. Exact private runtime installation, source-profile validation and independent three-file QA remain separate tasks. Backend source only; UI_STANDARD.md remains inherited.
 
 Rollback: Revert decoder source and synthetic tests; no external/provider/source state is changed.
+
+### PRIVATE-DATA-008 — Nango-compatible read-only evidence adapter source
+Priority: P0
+Status: TODO
+
+Goal: Convert the independently accepted `xlsx-evidence/v1` decoder from PRIVATE-DATA-007 into a compile-target source package compatible with the existing Nango custom-action build contract. This is source preparation only; installation and real-source execution remain separately governed.
+
+Requested work: Add a self-contained `createAction` entrypoint that bundles or adapts the accepted decoder without runtime CommonJS/module-loader assumptions. Use only compiler-allowed packages. Accept caller-supplied opaque source, parent, version and expected-hash fields; enforce a read-only metadata/read/metadata sequence, strict byte/ZIP/XML/output limits and bounded retries; emit generic `xlsx-evidence/v1` only. Add a deterministic build/compile preflight and synthetic tests. Document the exact artifact hash and handoff boundary. Do not invent Jespersen workbook profiles or map raw evidence into financial semantics.
+
+Acceptance:
+- trusted repository checks execute synthetic decoder, provider-boundary and compile-target tests;
+- the action entrypoint is compatible with the documented Nango `createAction` contract and contains no `require`, `module.exports`, credentials or tenant configuration;
+- only metadata/read operations are exposed and provider/source writes are structurally absent;
+- source identity, expected parent/version/hash, original-byte hashes, cell/formula/cache provenance and complete nonempty-cell coverage remain fail-closed;
+- unsupported formats and missing profile semantics remain explicit review states;
+- a reproducible artifact/source hash and deployment handoff are produced without installing the action or calling any provider;
+- independent QA passes before merge.
+
+Constraints:
+- public repository and synthetic fixtures only; no real workbook contents, source IDs, digests, folder/account identifiers, customer/employee/payroll/invoice values, private Hedy payloads, credentials or secrets;
+- do not call Hedy, Nango, Drive, QuickBooks or Gmail and do not install/deploy an action;
+- do not change auth, permissions, secrets, provider configuration, production, financial/accounting truth or protected control-plane files;
+- the expired fingerprint-reader grant is not authority for this task or any later installation;
+- exact code-bound approval, private profile validation and source-bound three-file QA remain separate staging gates.
+
+Rollback: Revert the isolated adapter-source, synthetic tests and documentation commit. No runtime, provider or source state is created or changed.
