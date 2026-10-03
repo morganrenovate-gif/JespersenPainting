@@ -85,7 +85,9 @@ class SyntheticOwnerViewTests(unittest.TestCase):
         self.assertIn("31.00", html)
         self.assertIn("invoices / synthetic-invoices-source", html.lower())
         self.assertIn("quickbooks / synthetic-quickbooks-source", html.lower())
-        for href in tree.hrefs:
+        fragments = [href for href in tree.hrefs if href.startswith("#")]
+        self.assertTrue(fragments)
+        for href in fragments:
             self.assertIn(href[1:], tree.ids)
         self.assertEqual(html.count("Compared field:"), 1)
         self.assertNotIn("Conflict — source values differ", render_job_economics(job))
@@ -151,3 +153,4 @@ class SyntheticOwnerViewTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
