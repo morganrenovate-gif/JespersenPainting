@@ -62,3 +62,8 @@ node_modules/
 .DS_Store
 .idea/
 .vscode/
+
+# Test/runtime caches are never repository deliverables
+__pycache__/
+*.py[cod]
+.pytest_cache/
