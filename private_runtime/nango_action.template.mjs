@@ -1,8 +1,35 @@
+// @ts-nocheck
 // PRIVATE-DATA-008 source template. Build script inlines the accepted decoder at the marker.
 import { createAction } from 'nango';
 import { z } from 'zod';
 import { createHash } from 'node:crypto';
-import { inflateRawSync } from 'node:zlib';
+// Nango remote compiler cannot package the zlib module; use the Node 22 Web decompression stream.
+async function inflateRawBounded(data, expected) {
+  if (!Number.isInteger(expected) || expected < 0 || expected > LIMIT.entry) fail('archive_limit');
+  let stream;
+  try {
+    stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  } catch {
+    fail('archive_limit');
+  }
+  const reader = stream.getReader(), chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const part = await reader.read();
+      if (part.done) break;
+      const chunk = Buffer.from(part.value);
+      total += chunk.length;
+      if (total > expected) fail('archive_limit');
+      chunks.push(chunk);
+    }
+  } catch (error) {
+    if (error?.code) throw error;
+    fail('archive_limit');
+  }
+  if (total !== expected) fail('archive_crc');
+  return Buffer.concat(chunks, total);
+}
 // INSERT_ACCEPTED_DECODER
 
 const hex256 = /^[a-f0-9]{64}$/;
