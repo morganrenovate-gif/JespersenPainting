@@ -47,6 +47,9 @@ function archive(b) {
 function xml(b) {
   if(!b || b.length>LIMIT.xml) fail('xml_limit');
   let s; try{s=new TextDecoder('utf-8',{fatal:true}).decode(b);}catch{fail('malformed_xml');}
+  if(s.charCodeAt(0)===0xfeff)s=s.slice(1);
+  const declaration=/^\s*<\?xml\s+version=(["'])1\.[01]\1(?:\s+encoding=(["'])UTF-8\2)?(?:\s+standalone=(["'])(?:yes|no)\3)?\s*\?>/i.exec(s);
+  if(declaration)s=s.slice(declaration[0].length);
   if(/<!|<\?|[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(s)) fail('malformed_xml');
   function decode(t) {
     if(/&(?!(?:[^&;]+);)/.test(t)) fail('malformed_xml');
