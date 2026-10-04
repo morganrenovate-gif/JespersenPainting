@@ -22,9 +22,32 @@ def build():
     if not decoder.startswith(HEADER) or not decoder.rstrip().endswith(FOOTER) or template.count(MARKER) != 1:
         raise ValueError('accepted decoder envelope changed: review required')
     body = decoder[len(HEADER):].rstrip()[:-len(FOOTER)]
-    artifact = template.replace(MARKER, '// Inlined accepted decoder (no runtime module loader).\n' + body)
-    if any(word in artifact for word in ('require(', 'module.exports', 'eval(', 'new Function(')):
-        raise ValueError('runtime module loader or evaluation detected')
+    rewrites = [
+        (
+            'function archive(b) {',
+            'async function archive(b) {',
+            'archive async boundary',
+        ),
+        (
+            "method===0 ? part(from,packed) : inflateRawSync(part(from,packed),{maxOutputLength:Math.max(1,plain)})",
+            "method===0 ? part(from,packed) : await inflateRawBounded(part(from,packed),plain)",
+            'Nango raw-deflate adapter',
+        ),
+        (
+            'function decode(bytes) {\n  const files=archive(bytes),',
+            'async function decode(bytes) {\n  const files=await archive(bytes),',
+            'decoder async boundary',
+        ),
+    ]
+    for old, new, label in rewrites:
+        if body.count(old) != 1:
+            raise ValueError(f'accepted decoder {label} changed: review required')
+        body = body.replace(old, new, 1)
+    artifact = template.replace(MARKER, '// Inlined accepted decoder with Nango-only decompression plumbing.\n' + body)
+    if any(word in artifact for word in ('require(', 'module.exports', 'eval(', 'new Function(', "import { inflateRawSync }", 'inflateRawSync(')):
+        raise ValueError('runtime module loader, evaluation, or unsupported zlib import detected')
+    if "DecompressionStream('deflate-raw')" not in artifact or 'const files=await archive(bytes)' not in artifact:
+        raise ValueError('Nango decompression adapter missing: review required')
     return artifact + '\n' if not artifact.endswith('\n') else artifact
 
 
