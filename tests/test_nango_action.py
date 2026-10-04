@@ -16,6 +16,9 @@ def test_nango_source_bundle_and_contract():
     artifact = build()
     assert artifact == build()
     assert 'module.exports' not in artifact and 'require(' not in artifact
+    assert 'import { inflateRawSync }' not in artifact and 'inflateRawSync(' not in artifact
+    assert "DecompressionStream('deflate-raw')" in artifact
+    assert 'async function decode(bytes)' in artifact and 'const files=await archive(bytes)' in artifact
     assert 'createAction({' in artifact
     with tempfile.TemporaryDirectory() as directory:
         target = pathlib.Path(directory)
